@@ -22,7 +22,6 @@ target
 *.rar
 *.tar
 *.zip
-*.md
  
 # Logs and databases #
 ######################
