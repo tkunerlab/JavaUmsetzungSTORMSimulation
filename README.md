@@ -35,7 +35,7 @@ mvn package
 ```
 
 4. (Optional) add java version to eclipse and run in eclipse
-* 
+* See [doc/eclipse.md](doc/eclipse.md)
 
 
 # Troubleshooting
