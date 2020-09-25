@@ -1,6 +1,13 @@
 
 
 
+
+# Installation
+
+## Linux
+
+
+
 ## MacOS - Tested on Catalina 10.16
 
 1. Install maven build management, preferably through homebrew
@@ -95,3 +102,13 @@ export JAVA_HOME=$JAVA_ZULU_HOME
 * https://www.thethingsnetwork.org/forum/t/lora-development-utility-on-macos-no-devices-found/21423
 * https://www.oracle.com/java/technologies/javase/jdk-jre-macos-catalina.html
 * https://github.com/facelessuser/Rummage/issues/353
+
+
+
+# Links
+
+
+* [Heidelberg Web Page Release](http://www.ana.uni-heidelberg.de/?id=198)
+* [StormLib](https://github.com/tkunerlab/StormLib)
+* [User_Manual_Version_0.5.2](http://www.ana.uni-heidelberg.de/fileadmin/SoftWare001/User_Manual_Version_0.5.2.pdf)
+
