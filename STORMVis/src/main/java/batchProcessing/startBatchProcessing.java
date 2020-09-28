@@ -60,7 +60,7 @@ public class startBatchProcessing {
 			e.printStackTrace();
 		}
 		//File file = new File("Y:\\Users_shared\\SuReSim-Software Project\\SuReSim Rebuttal\\Fire\\Simulation 12er Figure Table FRC\\Modelle\\141107-MT-Modelrescaled1d.wimp");
-		JOptionPane.showMessageDialog(null, "Sind die richtigen Parameter ausgewählt?");
+		JOptionPane.showMessageDialog(null, "Sind die richtigen Parameter ausgewï¿½hlt?");
 		proceedFileImport(new File(UserDefinedInputOutput.getInputFile()));
 		outputFolder = UserDefinedInputOutput.getOutputFolder();
 //		DataSet data = ExamplesProvidingClass.getDataset(1);
@@ -170,9 +170,14 @@ public class startBatchProcessing {
 		String importPath = "W:\\herrmannsdoerfer\\Sonstiges\\LaborTagebuch\\Dateien\\2016_09\\epitopes\\";
 		String outputFolder = "W:\\herrmannsdoerfer\\Sonstiges\\LaborTagebuch\\Dateien\\2016_09\\output\\";
 		(new File(outputFolder)).mkdir();
-		File[] listFiles = (new File(importPath)).listFiles();
-		
-		for (int i = 0; i<listFiles.length;i++){
+		File[] listFiles = (new File(importPath)).listFiles(new FilenameFilter() {
+			@Override
+			public boolean accept(File dir, String name) {
+				File f = new File(dir.getAbsolutePath() + File.separator + name);
+				return TriangleLineFilter.Utils.accept(f);
+			}
+		});
+		for (int i = 0; i < listFiles.length; i++) {
 			File file = listFiles[i];
 			proceedFileImport(file);
 			

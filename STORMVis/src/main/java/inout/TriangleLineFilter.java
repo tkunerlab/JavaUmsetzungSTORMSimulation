@@ -13,19 +13,7 @@ public class TriangleLineFilter extends FileFilter {
 	        return true;
 	    }
 
-	    String extension = Utils.getExtension(f);
-	    if (extension != null) {
-	        if (extension.equals(Utils.nff) ||
-	            extension.equals(Utils.wimp) ||
-	            extension.equals(Utils.txt) ||
-	        	extension.equals(Utils.ply)){
-	                return true;
-	        } else {
-	            return false;
-	        }
-	    }
-
-	    return false;
+		return Utils.accept(f);
 	}
 
 	@Override
@@ -54,6 +42,22 @@ public class TriangleLineFilter extends FileFilter {
 	        }
 	        return ext;
 	    }
+
+		public static boolean accept(File f) {
+			String extension = Utils.getExtension(f);
+			if (extension != null) {
+				if (extension.equals(Utils.nff) 
+					|| extension.equals(Utils.wimp) 
+					|| extension.equals(Utils.txt)
+					|| extension.equals(Utils.ply)) {
+					return true;
+				} else {
+					return false;
+				}
+			}
+
+			return false;
+		}
 	}
 
 }
