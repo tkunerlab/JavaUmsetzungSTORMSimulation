@@ -185,9 +185,9 @@ public class startBatchProcessing {
 			params.borders = getBorders();
 			String fname = FilenameUtils.getBaseName(file.getName());
 			
-			if(suReSimOutput){
-				new File(outputFolder+fname+"\\").mkdir();
-				exportData(outputFolder+fname+"\\",fname, params);
+			if (suReSimOutput) {
+				new File(outputFolder + fname + File.separator).mkdir();
+				exportData(outputFolder + fname + File.separator, fname, params);
 			}
 			if (tiffStackOutput){
 				
@@ -196,13 +196,25 @@ public class startBatchProcessing {
 				params.sigmaXY = 0.f;
 				params.sigmaZ = 0.f;
 				calculate(params);
-				CreateStack.createTiffStack(allDataSets.get(0).stormData, 1/133.f/**resolution*/ , 10/**emptyspace*/, 
-						10.f/**emGain*/,params.borders,random,4.81f/**electrons per AD*/, (float) 30.f/**frameRate*/, 
-						0.03f/**blinking duration*/,0.00f /**dead time*/, 15/**sizePSF*/, 1/**modelNR*/,1.f,
-						(float) 1.45f/**NA*/, 647.f/**waveLength*/, 200.f/**zFocus*/, 
-						600.f/**zDefocus*/, 35.7f/**sigmaNoise*/, 200.f/**constant offset*/, calibr/**calibration file*/,
-						outputFolder+fname+"\\"+fname+"TiffStack.tif",
-						false /* ensure single PSF*/, true /*split blinking over frames*/, new CreateTiffStack(null,null,null,null));
+				CreateStack.createTiffStack(allDataSets.get(0).stormData, 1 / 133.f/** resolution */
+						, 10/** emptyspace */
+						, 10.f/** emGain */
+						, params.borders, random, 4.81f/** electrons per AD */
+						, (float) 30.f/** frameRate */
+						, 0.03f/** blinking duration */
+						, 0.00f /** dead time */
+						, 15/** sizePSF */
+						, 1/** modelNR */
+						, 1.f, (float) 1.45f/** NA */
+						, 647.f/** waveLength */
+						, 200.f/** zFocus */
+						, 600.f/** zDefocus */
+						, 35.7f/** sigmaNoise */
+						, 200.f/** constant offset */
+						, calibr/** calibration file */
+						, outputFolder + fname + File.separator + fname + "TiffStack.tif",
+						false /* ensure single PSF */, true /* split blinking over frames */,
+						new CreateTiffStack(null, null, null, null));
 			
 			}
 		}
@@ -546,7 +558,7 @@ class UserDefinedInputOutput{
 				fileChooserInput.showOpenDialog(null);
 				inputFolder = fileChooserInput.getSelectedFile().toString();
 				saveLastInputPath(inputFolder);
-				return inputFolder+"\\";
+			return inputFolder + File.separator;
 			case 1:
 				tag = "Please select output data path:";
 				fileChooserOutput.setDialogTitle(tag);
@@ -554,7 +566,7 @@ class UserDefinedInputOutput{
 				fileChooserOutput.showOpenDialog(null);
 				outputFolder = fileChooserOutput.getSelectedFile().toString();
 				saveLastOutputPath(outputFolder);
-				return outputFolder+"\\";
+			return outputFolder + File.separator;
 			case 2:
 				tag = "Please select input data Filename:";
 				fileChooserInput.setDialogTitle(tag);
@@ -579,7 +591,8 @@ class UserDefinedInputOutput{
 	private static String loadLastInputPath(){
 		String lastPath = System.getProperty("user.home");
 		try {
-			lastPath = FileUtils.readFileToString(new File(System.getProperty("user.home")+"\\lastPathChosenForLoading.txt"));
+			lastPath = FileUtils.readFileToString(
+					new File(System.getProperty("user.home") + File.separator + "lastPathChosenForLoading.txt"));
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			if (e1 instanceof FileNotFoundException){
@@ -588,29 +601,36 @@ class UserDefinedInputOutput{
 		}
 		return lastPath;
 	}
-	private static void saveLastInputPath(String lastPath){
+	private static void saveLastInputPath(String lastPath) {
 		try {
-			FileUtils.writeStringToFile(new File(System.getProperty("user.home")+"\\lastPathChosenForLoading.txt"), lastPath);
+			FileUtils.writeStringToFile(
+					new File(System.getProperty("user.home") + File.separator + "lastPathChosenForLoading.txt"),
+					lastPath);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
-	private static String loadLastOutputPath(){
+
+	private static String loadLastOutputPath() {
 		String lastPath = System.getProperty("user.home");
 		try {
-			lastPath = FileUtils.readFileToString(new File(System.getProperty("user.home")+"\\lastPathChosenForSaving.txt"));
+			lastPath = FileUtils.readFileToString(
+					new File(System.getProperty("user.home") + File.separator + "lastPathChosenForSaving.txt"));
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
-			if (e1 instanceof FileNotFoundException){
+			if (e1 instanceof FileNotFoundException) {
 				System.out.println("File not found.");
 			}
 		}
 		return lastPath;
 	}
-	private static void saveLastOutputPath(String lastPath){
+
+	private static void saveLastOutputPath(String lastPath) {
 		try {
-			FileUtils.writeStringToFile(new File(System.getProperty("user.home")+"\\lastPathChosenForSaving.txt"), lastPath);
+			FileUtils.writeStringToFile(
+					new File(System.getProperty("user.home") + File.separator + "lastPathChosenForSaving.txt"),
+					lastPath);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
