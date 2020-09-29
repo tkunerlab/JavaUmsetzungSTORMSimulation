@@ -1,10 +1,3 @@
-
-News:
-
-*
-
-
-
 # Usage
 
 
@@ -25,6 +18,7 @@ mvn package
 
 * this creats a GUI programm (`suresim_gui.jar-with-dependencies.jar`) and a CLI program (`suresim_cli.jar-with-dependencies.jar`)
 * depending on your OS, there might be additional steps necessary to get this to work.
+* Both programs can be run using `java -jar XXX arg1, arg2, arg3`.
 
 ## Linux
 
