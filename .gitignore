@@ -43,6 +43,8 @@ Thumbs.db
 *.nff
 *.wimp
 *.txt
+!examples/*/*.txt
+examples/cli_example/cli_output
 .idea/*
 STORMVis/STORMVis.iml
 STORMVis/.idea/.name
