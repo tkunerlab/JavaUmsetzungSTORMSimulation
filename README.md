@@ -1,8 +1,30 @@
 
+News:
+
+*
+
+
+
+# Usage
+
+
+* [Command Line Interface (CLI)](doc/cli.md)
+
 
 
 
 # Installation
+
+In general, building the jars is done using maven
+
+```bash
+mvn clean
+mvn install
+mvn package
+```
+
+* this creats a GUI programm (`suresim_gui.jar-with-dependencies.jar`) and a CLI program (`suresim_cli.jar-with-dependencies.jar`)
+* depending on your OS, there might be additional steps necessary to get this to work.
 
 ## Linux
 
