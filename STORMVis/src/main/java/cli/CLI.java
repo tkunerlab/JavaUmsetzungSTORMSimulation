@@ -28,9 +28,16 @@ public class CLI {
 	static float[] shifts = { 0, 0, 0 };
 
 	public static void main(String[] args) {
-		String inputModelFile = "/Users/sandrobraun/Desktop/inputs/model_file.txt";
-		String outputFolder = "/Users/sandrobraun/Desktop/outputs/cli_out";
-		String inputSimulationConfig = "/Users/sandrobraun/Desktop/inputs/simulationParameters.json";
+		// TODO: Handling command line arguments can probably be done more easily using
+		// this package
+		// https://picocli.info
+		// run with the following args:
+		// /Users/sandrobraun/Desktop/inputs/model_file.txt
+		// /Users/sandrobraun/Desktop/outputs/cli_out
+		// /Users/sandrobraun/Desktop/inputs/simulationParameters.json
+		String inputModelFile = args[0];
+		String inputSimulationConfig = args[1];
+		String outputFolder = args[2];
 		boolean tiffStackOutput = false;
 		boolean suReSimOutput = true;
 		DataSet data = new DataSet(new ParameterSet());
