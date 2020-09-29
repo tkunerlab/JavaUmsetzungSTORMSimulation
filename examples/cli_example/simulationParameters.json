@@ -1,0 +1,23 @@
+{
+  "angleOfLabel": 1.5707964,
+  "angularDeviation": 0.0,
+  "labelingEfficiency": 10.0,
+  "detectionEfficiency": 100.0,
+  "backgroundPerMicroMeterCubed": 0.0,
+  "labelEpitopeDistance": 16.0,
+  "fluorophoresPerLabel": 1.5,
+  "recordedFrames": 10000,
+  "dutyCycle": 5.0E-4,
+  "sigmaXY": 4.0,
+  "sigmaZ": 8.0,
+  "MeanPhotonNumber": 4000,
+  "radiusOfFilament": 12.5,
+  "epitopeDensity": 1.625,
+  "coupleSigmaIntensity": true,
+  "makeItReproducible": true,
+  "viewStatus": 1,
+  "pixelsize": 100.0,
+  "sigmaRendering": 100.0,
+  "colorProof": true,
+  "useSTORMBlinking": false
+}
