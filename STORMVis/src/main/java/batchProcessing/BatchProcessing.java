@@ -116,6 +116,7 @@ public class BatchProcessing {
         for(int i=0;i<params.size();i++){
         	for(int j=0;j<allDataSets.size();j++){
         		for(int r=0;r<conf.repeat_experiment;r++){
+        			setUpRandomNumberGenerator(conf.reproducible);
 		    		allDataSets.get(j).setParameterSet(params.get(i)); //set new parameters to model
 		    		
 		    		//create new directory for this run
@@ -151,23 +152,37 @@ public class BatchProcessing {
 		    		FileManager.ExportToFile(calc.getCurrentDataSet(), fullpath+"/plain.tif", conf.viewstatus, borders, 
 		    				params.get(i).getPixelsize(), params.get(i).getSigmaRendering(), conf.shifts);
 		    		
-		    		//set localization to 0 if we use tiffstack
-		    		//new File(outputFolder + fname + File.separator).mkdir();
-					//exportData(outputFolder + fname + File.separator, fname,
-					//		params);
 		    		
 		    		//if needed create tiffstack here
-		    		/*
+		    		
 		    		if(conf.output_tiffstack){
-		    			setUpRandomNumberGenerator(conf.reproducible);
-						CreateTiffStack cts = new CreateTiffStack(allDataSets.get(j), path, random,
-								selfReference);
-						cts.addPropertyChangeListener(selfReference);
-						cts.execute();
-						FileManager.writeLogFile(allDataSets.get(currentRow).getParameterSet(),
-								path.substring(0, path.length() - 4) + "TiffStack", borders, true);
+		    			allDataSets.get(j).setProgressBar(new JProgressBar());
+		    			allDataSets.get(j).getParameterSet().setSxy(0.0f);
+		    			allDataSets.get(j).getParameterSet().setSz(0.0f);
+		    			calc = new STORMCalculator(allDataSets.get(j), random);
+			    		calc.execute();
+			    		while (!calc.isDone()) {
+			    			try {
+			    				Thread.sleep(100);
+			    				// System.out.println(calc.isCancelled()+" "+calc.isDone());
+			    			} catch (InterruptedException e) {
+			    				// TODO Auto-generated catch block
+			    				e.printStackTrace();
+			    			}
+			    		}
+			    		thisDataSet = calc.getCurrentDataSet();
+		    			ParameterSet psSet = thisDataSet.getParameterSet();
+		    			int modelNumber = 2;
+		    			if (psSet.isTwoDPSF()){
+		    				modelNumber  = 1;
+		    			}
+		    			CreateStack.createTiffStack(thisDataSet.stormData, 1/psSet.getPixelToNmRatio(),
+		    					psSet.getEmptyPixelsOnRim(),psSet.getEmGain(), borders, random,
+		    					psSet.getElectronPerAdCount(), psSet.getFrameRate(), psSet.getMeanBlinkingTime(), psSet.getDeadTime(), psSet.getWindowsizePSF(),
+		    					modelNumber,psSet.getQuantumEfficiency(), psSet.getNa(), psSet.getPsfwidth(), psSet.getFokus(), psSet.getDefokus(), psSet.getSigmaBg(),
+		    					psSet.getConstOffset(), psSet.getCalibrationFile(), fullpath+"/tiffstack.tiff",psSet.isEnsureSinglePSF(), psSet.isDistributePSFoverFrames(),new CreateTiffStack(null, null, null, null));
 		    		}
-		    		*/
+		    		
         		}
         	}
         }
