@@ -80,8 +80,13 @@ public class BatchConfig {
 	public int repeat_experiment = 1;				//how often should a single parameter combo be simulated
 	public boolean output_rendering = true;
 	public boolean output_tiffstack = true;
+	public String calibration_file = "";
 	public ArrayList<BatchParameter> parameters = new ArrayList<BatchParameter>();
 	public int total_combos = 1;
+	public boolean reproducible = true;
+	public int viewstatus = 1;
+	public float[] shifts = {0 , 0, 0};
+	public ArrayList<Float> borders = new ArrayList<Float>();
 	
 	public boolean load(String path) {
 		//try to open file
@@ -95,9 +100,11 @@ public class BatchConfig {
 		}
 		
 		String section = "";
+		boolean no_end_triggered = false; //if we need to read across multiple lines
+		String curline = "";
 		while(sc.hasNextLine()) {
 			String line = sc.nextLine();
-			if(line.isEmpty()) {
+			if(line.isEmpty() || line.length()<=3) {
 				continue;
 			}
 			
@@ -119,7 +126,7 @@ public class BatchConfig {
 				}
 			} else {
 				//if we are in parameter section
-				if(section.equals("Parameters")) {
+				if(section.equals("Parameters") && !no_end_triggered) {
 					//first of all remove all whitespaces
 					line = line.replace(" ", "");
 					line = line.replace("\t", "");
@@ -131,10 +138,10 @@ public class BatchConfig {
 					} else {
 						JOptionPane.showMessageDialog(null,"Line in Parameter section does not contain = !!!\n Ignoring Line", "Malformatted Input", JOptionPane.ERROR_MESSAGE);
 					}
-				} else if(section.equals("General")) {
+				} else if(section.equals("General") && !no_end_triggered) {
 					pos = line.indexOf('=');
 					//obtain experiment parameters
-					if(line.contains("name")) {
+					if(line.contains("Name")) {
 						//must be given within "name"
 						pos = line.indexOf('\"');
 						int pos2 = line.indexOf('\"', pos+1);
@@ -143,7 +150,7 @@ public class BatchConfig {
 						} else {
 							JOptionPane.showMessageDialog(null,"Run name is not given within \"!\n Using default", "Malformatted Input", JOptionPane.ERROR_MESSAGE);
 						}
-					} else if(line.contains("output_path")) {
+					} else if(line.contains("OutputPath")) {
 						pos = line.indexOf('\"');
 						int pos2 = line.indexOf('\"', pos+1);
 						if(pos2-pos-1>0) {
@@ -151,17 +158,45 @@ public class BatchConfig {
 						} else {
 							JOptionPane.showMessageDialog(null,"Output path is not given within \"!\n Using default", "Malformatted Input", JOptionPane.ERROR_MESSAGE);
 						}
-					} else if(line.contains("output_rendering")) {
+					} else if(line.contains("OutputRendering")) {
 						String sub = line.substring(pos+1);
 						sub = sub.replaceAll(" ", "");
 						sub = sub.replaceAll("\t", "");
 						this.output_rendering = (Integer.parseInt(sub)>0);
-					} else if(line.contains("output_tiffstack")) {
+					} else if(line.contains("OutputTiffStack")) {
 						String sub = line.substring(pos+1);
 						sub = sub.replaceAll(" ", "");
 						sub = sub.replaceAll("\t", "");
 						this.output_tiffstack = (Integer.parseInt(sub)>0);
-					} else if(line.contains("models")) {
+					} else if(line.contains("CalibrationFile")) {
+						pos = line.indexOf('\"');
+						int pos2 = line.indexOf('\"', pos+1);
+						if(pos2-pos>0) {
+							this.calibration_file = line.substring(pos+1, pos2);
+						} else {
+							JOptionPane.showMessageDialog(null,"CalibrationFile path is not given within \"!\n Using none", "Malformatted Input", JOptionPane.ERROR_MESSAGE);
+						}
+					}
+					
+				} else if(section.equals("Simulation") && !no_end_triggered){
+					pos = line.indexOf('=');
+					//everything regarding global simulation options
+					if(line.contains("RepeatExperiment")) {
+						String sub = line.substring(pos+1);
+						sub = sub.replaceAll(" ", "");
+						sub = sub.replaceAll("\t", "");
+						this.repeat_experiment = Integer.parseInt(sub);
+					} else if(line.contains("Reproducible")) {
+						String sub = line.substring(pos+1);
+						sub = sub.replaceAll(" ", "");
+						sub = sub.replaceAll("\t", "");
+						this.reproducible = (Integer.parseInt(sub)>0);
+					} else if(line.contains("ViewStatus")) {
+						String sub = line.substring(pos+1);
+						sub = sub.replaceAll(" ", "");
+						sub = sub.replaceAll("\t", "");
+						this.reproducible = (Integer.parseInt(sub)>0);
+					} else if(line.contains("Models")) { //TODO: currently models only support single line reading -> expand to multiple rows
 						pos = line.indexOf('[');
 						int pos2 = line.indexOf(']', pos+1);
 						if(pos2-pos-1>0) {
@@ -181,16 +216,18 @@ public class BatchConfig {
 							JOptionPane.showMessageDialog(null,"Models are empty or not given within []!\n Aborting ...", "Malformatted Input", JOptionPane.ERROR_MESSAGE);
 							System.exit(-1);
 						}
-					} else if(line.contains("repeat_experiment")) {
-						String sub = line.substring(pos+1);
-						sub = sub.replaceAll(" ", "");
-						sub = sub.replaceAll("\t", "");
-						this.repeat_experiment = Integer.parseInt(sub);
 					}
+				} else {
+					JOptionPane.showMessageDialog(null,"Section does not exist!\n Aborting ...", "Malformatted Input", JOptionPane.ERROR_MESSAGE);
+					System.exit(-1);
 				}
 			}
 		}
 		sc.close();
+		if(no_end_triggered) {
+			JOptionPane.showMessageDialog(null,"Line  has no end!\n Aborting ...", "Malformatted Input", JOptionPane.ERROR_MESSAGE);
+			System.exit(-1);
+		}
 		
 		/*
 		//simple test to check if parsing works
@@ -206,8 +243,6 @@ public class BatchConfig {
 			System.out.print(parameters.get(i).name + " " + parameters.get(i).values.toString() + "\n");
 		}
 		*/
-		
-		System.out.print(this.total_combos);
 		
 		return true;
 	}
@@ -364,10 +399,10 @@ public class BatchConfig {
 					case "MeanBlinkingTime":
 						p.setMeanBlinkingTime(c);
 						break;
-					case "DistributePSFOVerFrames":
+					case "DistributePSFOverFrames":
 						p.setDistributePSFoverFrames(c>0);
 						break;
-					case "EnsureSInglePSF":
+					case "EnsureSinglePSF":
 						p.setEnsureSinglePSF(c>0);
 						break;
 					case "MinIntensity":
@@ -383,7 +418,7 @@ public class BatchConfig {
 						p.setColorProof(c>0);
 						break;
 					default:
-						JOptionPane.showMessageDialog(null,"Given Parameter does not exists: " + this.parameters.get(i).name, JOptionPane.ERROR_MESSAGE);
+						JOptionPane.showMessageDialog(null, "Given Parameter does not exists: " + this.parameters.get(i).name + "!", "Malformatted Input", JOptionPane.ERROR_MESSAGE);
 						System.exit(-1);
 						break;
 						

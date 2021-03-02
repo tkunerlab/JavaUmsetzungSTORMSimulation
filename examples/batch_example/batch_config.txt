@@ -1,0 +1,61 @@
+#This is a comment
+#Main section
+[General]
+Name = "Testrun"
+OutputPath = "../batch_out"
+OutputRendering = 1
+OutputTiffStack = 1
+
+[Simulation]
+RepeatExperiment = 1
+Reproducible = 1
+ViewStatus = 1
+Models = ["examples/models/Mitochondria.nff"]  #put everything in is THIS line!!!
+Shifts = [0, 0, 0]
+Borders = []
+CalibrationFile = ""                #Currently unsupported
+
+#Place all parameters after here
+[Parameters]
+LabelingEfficiency = 10             #[%]
+MeanAngleField = 1.57
+AngularDistribution = 0.0
+DetectionEfficiency = 100.0         #[%]
+BackgroundLabel = 0.0
+LabelLength = 15.0
+FluorophoresPerLabel = 1.0
+DutyCycle = 0.0005
+BleachConstant = 2.231e-5
+RecordedFrames = 10000 
+locPrecisionXY = 4.0
+locPrecisionZ = 8.0
+PsfWidth = 647.0
+AveragePhotonNumber = 4000
+EpitopeDensityL = 1.625
+EpitopeDensity = 0.0167
+RadiusOfFilaments = 12.5
+PointSize = 4.0
+LineWidth = 2.0
+ApplyBleaching = 0
+CoupleSigmaIntensity = 1
+PixelToNmRatio = 133.0 
+FrameRate = 30.0
+DeadTime = 0.0
+SigmaBg = 22.0
+ConstantOffset = 200.0
+EmGain = 10.0
+QuantumEfficiency = 1.0
+WindowSizePSF = 10
+EmptyPixelsOnRim = 5
+Na = 1.45
+Focus = 400.0
+Defocus = 800.0
+TiffStackMode = 1
+ElectronPerAdCount = 4.81
+MeanBlinkingTime = 0.05
+DistributePSFOverFrames = 1
+EnsureSinglePSF = 0
+MinIntensity = 1000
+PixelSize = 10
+SigmaRendering = 10
+BlueGreenOnly = 0
