@@ -118,7 +118,6 @@ public class BatchProcessing {
         		for(int r=0;r<conf.repeat_experiment;r++){
         			setUpRandomNumberGenerator(conf.reproducible);
 		    		allDataSets.get(j).setParameterSet(params.get(i)); //set new parameters to model
-		    		
 		    		//create new directory for this run
 		    		String fullpath = String.format("%s/model%d/set%d/run%d", base_path, j, i, r);
 		    		(new File(fullpath)).mkdirs();
@@ -138,15 +137,16 @@ public class BatchProcessing {
 		    			}
 		    		}
 		    		DataSet thisDataSet = calc.getCurrentDataSet();
-		    		ArrayList<Float> borders = conf.borders;
-		    		if(conf.borders.size()!=6){
-		    			borders.add(Calc.min(thisDataSet.stormData, 0));
-		    			borders.add(Calc.max(thisDataSet.stormData, 0));
-		    			borders.add(Calc.min(thisDataSet.stormData, 1));
-		    			borders.add(Calc.max(thisDataSet.stormData, 1));
-		    			borders.add(Calc.min(thisDataSet.stormData, 2));
-		    			borders.add(Calc.max(thisDataSet.stormData, 2));
-		    		}
+		    		//ArrayList<Float> borders = conf.borders;
+		    		ArrayList<Float> borders = new ArrayList<Float>();
+		    		//if(conf.borders.size()!=6){
+	    			borders.add(Calc.min(thisDataSet.stormData, 0));
+	    			borders.add(Calc.max(thisDataSet.stormData, 0));
+	    			borders.add(Calc.min(thisDataSet.stormData, 1));
+	    			borders.add(Calc.max(thisDataSet.stormData, 1));
+	    			borders.add(Calc.min(thisDataSet.stormData, 2));
+	    			borders.add(Calc.max(thisDataSet.stormData, 2));
+		    		//}
 		    		
 		    		//save output
 		    		FileManager.ExportToFile(calc.getCurrentDataSet(), fullpath+"/plain.tif", conf.viewstatus, borders, 

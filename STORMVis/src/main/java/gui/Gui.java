@@ -66,6 +66,7 @@ import org.jzy3d.maths.Coord3d;
 import org.jzy3d.plot3d.rendering.canvas.Quality;
 
 import calc.Calc;
+import calc.CreateStack;
 import calc.STORMCalculator;
 import editor.Editor;
 import evaluation.Oberflaeche_Jaccard_Tool;
@@ -81,6 +82,8 @@ import model.SerializableImage;
 import model.TriangleDataSet;
 import parsing.CalibrationFileParser;
 import table.DataSetTableModel;
+
+import batchProcessing.BatchConfig;
 
 /**
  * @brief Sketch of GUI
@@ -1993,6 +1996,22 @@ public class Gui extends JFrame implements TableModelListener, PropertyChangeLis
 
 		});
 		toolBar.add(btnEvaluate);
+		
+		JButton btnBatch = new JButton("BatchProcessing");
+		btnBatch.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				chooser.setAcceptAllFileFilterUsed(false);
+				chooser.setFileSelectionMode(0);
+				int returnVal = chooser.showOpenDialog(getContentPane()); // replace null with your swing container
+				if (returnVal == JFileChooser.APPROVE_OPTION) {
+					//load batch-config file
+					startBatchProcessing(chooser.getSelectedFile().getPath());
+				}
+				
+			}
+		});
+		toolBar.add(btnBatch);
 
 		Component horizontalGlue_25 = Box.createHorizontalGlue();
 		toolBar.add(horizontalGlue_25);
@@ -2792,6 +2811,136 @@ public class Gui extends JFrame implements TableModelListener, PropertyChangeLis
 		allDataSets.get(currentRow).getParameterSet().setPixelsize(new Float(pixelSizeField.getText()));
 		allDataSets.get(currentRow).getParameterSet().setSigmaRendering(new Float(sigmaSizeField.getText()));
 		allDataSets.get(currentRow).getParameterSet().setColorProof(blueGreenOnlyChkBox.isSelected());
+	}
+	
+	public void startBatchProcessing(String path) {
+		//create output folder
+		BatchConfig conf = new BatchConfig();
+		if (!conf.load(path)) {
+        	System.out.print("Can't locate config file!");
+        	System.exit(-1);
+        }
+		String base_path = "";
+        if(conf.out_path.length()>0) {
+        	boolean use_output = true;
+        	
+        	String fullpath = "";
+        	//put strings together
+        	if(conf.out_path.charAt(conf.out_path.length()-1)=='/'){
+        		fullpath = conf.out_path + conf.name;
+        	} else {
+        		fullpath = conf.out_path + "/" + conf.name;
+        	}
+        	
+        	if(fullpath.charAt(fullpath.length()-1)=='/') {
+        		fullpath = fullpath.substring(0, fullpath.length()-2);
+        	}
+        	base_path = fullpath;
+        	
+        	(new File(fullpath)).mkdirs();
+        	System.out.print("Saving data in " + fullpath + "\n");
+        }
+        
+        //convert parameters
+        ArrayList<ParameterSet> params = conf.convertToParamterSet();
+        
+        //check if model files exist and import model
+        allDataSets.clear();
+        for(int i=0;i<conf.models.size();i++){
+        	File f = new File(conf.models.get(i));
+        	if(!f.exists() || f.isDirectory()) { 
+        		JOptionPane.showMessageDialog(null,"Cannot load model from " + conf.models.get(i), "Model Error", JOptionPane.ERROR_MESSAGE);
+				System.exit(-1);
+        	}
+        	//load_model(f);
+        	proceedFileImport(f);
+        }
+        
+        //do stuff and call STORM calculator
+        for(int i=0;i<params.size();i++){
+        	for(int j=0;j<allDataSets.size();j++){
+        		for(int r=0;r<conf.repeat_experiment;r++){
+        			if (conf.reproducible) {
+        				random = new Random(2);
+        			} else {
+        				random = new Random(System.currentTimeMillis());
+        			}
+		    		allDataSets.get(j).setParameterSet(params.get(i)); //set new parameters to model
+		    		//create new directory for this run
+		    		String fullpath = String.format("%s/model%d/set%d/run%d", base_path, j, i, r);
+		    		(new File(fullpath)).mkdirs();
+		    		
+		    		
+		    		//do calculation
+		    		allDataSets.get(j).setProgressBar(this.progressBar);
+		    		STORMCalculator calc = new STORMCalculator(allDataSets.get(j), random);
+		    		calc.addListener(this);
+		    		calc.addPropertyChangeListener(this);
+		    		calc.execute();
+		    		/*
+		    		while (!calc.isDone()) {
+		    			try {
+		    				Thread.sleep(100);
+		    				// System.out.println(calc.isCancelled()+" "+calc.isDone());
+		    			} catch (InterruptedException e) {
+		    				// TODO Auto-generated catch block
+		    				e.printStackTrace();
+		    			}
+		    		}
+		    		DataSet thisDataSet = calc.getCurrentDataSet();
+		    		//ArrayList<Float> borders = conf.borders;
+		    		ArrayList<Float> borders = new ArrayList<Float>();
+		    		//if(conf.borders.size()!=6){
+	    			borders.add(Calc.min(thisDataSet.stormData, 0));
+	    			borders.add(Calc.max(thisDataSet.stormData, 0));
+	    			borders.add(Calc.min(thisDataSet.stormData, 1));
+	    			borders.add(Calc.max(thisDataSet.stormData, 1));
+	    			borders.add(Calc.min(thisDataSet.stormData, 2));
+	    			borders.add(Calc.max(thisDataSet.stormData, 2));
+		    		//}
+		    		
+		    		//save output
+		    		FileManager.ExportToFile(calc.getCurrentDataSet(), fullpath+"/plain.tif", conf.viewstatus, borders, 
+		    				params.get(i).getPixelsize(), params.get(i).getSigmaRendering(), conf.shifts);
+		    		
+		    		*/
+		    		//if needed create tiffstack here
+		    		
+		    		if(conf.output_tiffstack){
+		    			allDataSets.get(j).setProgressBar(this.progressBar);
+		    			allDataSets.get(j).getParameterSet().setSxy(0.0f);
+		    			allDataSets.get(j).getParameterSet().setSz(0.0f);
+		    			calc = new STORMCalculator(allDataSets.get(j), random);
+		    			calc.addListener(this);
+			    		calc.addPropertyChangeListener(this);
+			    		calc.execute();
+			    		/*
+			    		while (!calc.isDone()) {
+			    			try {
+			    				Thread.sleep(100);
+			    				// System.out.println(calc.isCancelled()+" "+calc.isDone());
+			    			} catch (InterruptedException e) {
+			    				// TODO Auto-generated catch block
+			    				e.printStackTrace();
+			    			}
+			    		}
+			    		thisDataSet = calc.getCurrentDataSet();
+		    			ParameterSet psSet = thisDataSet.getParameterSet();
+		    			int modelNumber = 2;
+		    			if (psSet.isTwoDPSF()){
+		    				modelNumber  = 1;
+		    			}
+		    			CreateStack.createTiffStack(thisDataSet.stormData, 1/psSet.getPixelToNmRatio(),
+		    					psSet.getEmptyPixelsOnRim(),psSet.getEmGain(), borders, random,
+		    					psSet.getElectronPerAdCount(), psSet.getFrameRate(), psSet.getMeanBlinkingTime(), psSet.getDeadTime(), psSet.getWindowsizePSF(),
+		    					modelNumber,psSet.getQuantumEfficiency(), psSet.getNa(), psSet.getPsfwidth(), psSet.getFokus(), psSet.getDefokus(), psSet.getSigmaBg(),
+		    					psSet.getConstOffset(), psSet.getCalibrationFile(), fullpath+"/tiffstack.tiff",psSet.isEnsureSinglePSF(), psSet.isDistributePSFoverFrames(),new CreateTiffStack(null, null, null, null));
+		    			*/
+		    		}
+		    		
+        		}
+        	}
+        }
 	}
 
 }

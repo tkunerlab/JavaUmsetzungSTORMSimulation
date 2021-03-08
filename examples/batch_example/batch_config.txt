@@ -4,20 +4,20 @@
 Name = "Testrun"
 OutputPath = "../batch_out"
 OutputRendering = 1
-OutputTiffStack = 1
+OutputTiffStack = 0
 
 [Simulation]
-RepeatExperiment = 1
+RepeatExperiment = 1        #how often the same parameter set is repeated
 Reproducible = 1
 ViewStatus = 1
-Models = ["examples/models/Mitochondria.nff"]  #put everything in is THIS line!!!
+Models = ["examples/models/Microtubules.wimp"; "examples/models/Mitochondria.nff"]  #put everything in is THIS line!!!
 Shifts = [0, 0, 0]
 Borders = []
 CalibrationFile = ""                #Currently unsupported
 
 #Place all parameters after here
 [Parameters]
-LabelingEfficiency = 10             #[%]
+LabelingEfficiency = [10...100/(20)]             #[%]
 MeanAngleField = 1.57
 AngularDistribution = 0.0
 DetectionEfficiency = 100.0         #[%]

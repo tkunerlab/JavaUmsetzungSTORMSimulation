@@ -216,6 +216,17 @@ public class BatchConfig {
 							JOptionPane.showMessageDialog(null,"Models are empty or not given within []!\n Aborting ...", "Malformatted Input", JOptionPane.ERROR_MESSAGE);
 							System.exit(-1);
 						}
+					} else if(line.contains("CalibrationFile")) {
+						pos = line.indexOf('\"');
+						int pos2 = line.indexOf('\"', pos+1);
+						if(pos2-pos>0) {
+							String cpath = line.substring(pos+1, pos2);
+							//lets try to open calibration file
+							
+							
+						} else {
+							JOptionPane.showMessageDialog(null,"Calibration filepath is not given within \"!\n Using default", "Malformatted Input", JOptionPane.ERROR_MESSAGE);
+						}
 					}
 				} else {
 					JOptionPane.showMessageDialog(null,"Section does not exist!\n Aborting ...", "Malformatted Input", JOptionPane.ERROR_MESSAGE);
