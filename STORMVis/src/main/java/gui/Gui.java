@@ -84,6 +84,7 @@ import parsing.CalibrationFileParser;
 import table.DataSetTableModel;
 
 import batchProcessing.BatchConfig;
+import batchProcessing.BatchProcessor;
 
 /**
  * @brief Sketch of GUI
@@ -2856,91 +2857,104 @@ public class Gui extends JFrame implements TableModelListener, PropertyChangeLis
         	proceedFileImport(f);
         }
         
-        //do stuff and call STORM calculator
-        for(int i=0;i<params.size();i++){
-        	for(int j=0;j<allDataSets.size();j++){
-        		for(int r=0;r<conf.repeat_experiment;r++){
-        			if (conf.reproducible) {
-        				random = new Random(2);
-        			} else {
-        				random = new Random(System.currentTimeMillis());
-        			}
+	    //do stuff and call STORM calculator
+	    for(int i=0;i<params.size();i++){
+			for(int r=0;r<conf.repeat_experiment;r++){
+				ArrayList<BatchProcessor> runs = new ArrayList<BatchProcessor>();
+				for(int j=0;j<allDataSets.size();j++){
 		    		allDataSets.get(j).setParameterSet(params.get(i)); //set new parameters to model
 		    		//create new directory for this run
 		    		String fullpath = String.format("%s/model%d/set%d/run%d", base_path, j, i, r);
-		    		(new File(fullpath)).mkdirs();
 		    		
-		    		
-		    		//do calculation
-		    		allDataSets.get(j).setProgressBar(this.progressBar);
-		    		STORMCalculator calc = new STORMCalculator(allDataSets.get(j), random);
-		    		calc.addListener(this);
-		    		calc.addPropertyChangeListener(this);
-		    		calc.execute();
-		    		/*
-		    		while (!calc.isDone()) {
-		    			try {
-		    				Thread.sleep(100);
-		    				// System.out.println(calc.isCancelled()+" "+calc.isDone());
-		    			} catch (InterruptedException e) {
-		    				// TODO Auto-generated catch block
-		    				e.printStackTrace();
-		    			}
-		    		}
-		    		DataSet thisDataSet = calc.getCurrentDataSet();
-		    		//ArrayList<Float> borders = conf.borders;
-		    		ArrayList<Float> borders = new ArrayList<Float>();
-		    		//if(conf.borders.size()!=6){
-	    			borders.add(Calc.min(thisDataSet.stormData, 0));
-	    			borders.add(Calc.max(thisDataSet.stormData, 0));
-	    			borders.add(Calc.min(thisDataSet.stormData, 1));
-	    			borders.add(Calc.max(thisDataSet.stormData, 1));
-	    			borders.add(Calc.min(thisDataSet.stormData, 2));
-	    			borders.add(Calc.max(thisDataSet.stormData, 2));
-		    		//}
-		    		
-		    		//save output
-		    		FileManager.ExportToFile(calc.getCurrentDataSet(), fullpath+"/plain.tif", conf.viewstatus, borders, 
-		    				params.get(i).getPixelsize(), params.get(i).getSigmaRendering(), conf.shifts);
-		    		
-		    		*/
-		    		//if needed create tiffstack here
-		    		
-		    		if(conf.output_tiffstack){
-		    			allDataSets.get(j).setProgressBar(this.progressBar);
-		    			allDataSets.get(j).getParameterSet().setSxy(0.0f);
-		    			allDataSets.get(j).getParameterSet().setSz(0.0f);
-		    			calc = new STORMCalculator(allDataSets.get(j), random);
-		    			calc.addListener(this);
-			    		calc.addPropertyChangeListener(this);
-			    		calc.execute();
-			    		/*
-			    		while (!calc.isDone()) {
-			    			try {
-			    				Thread.sleep(100);
-			    				// System.out.println(calc.isCancelled()+" "+calc.isDone());
-			    			} catch (InterruptedException e) {
-			    				// TODO Auto-generated catch block
-			    				e.printStackTrace();
-			    			}
-			    		}
-			    		thisDataSet = calc.getCurrentDataSet();
-		    			ParameterSet psSet = thisDataSet.getParameterSet();
-		    			int modelNumber = 2;
-		    			if (psSet.isTwoDPSF()){
-		    				modelNumber  = 1;
-		    			}
-		    			CreateStack.createTiffStack(thisDataSet.stormData, 1/psSet.getPixelToNmRatio(),
-		    					psSet.getEmptyPixelsOnRim(),psSet.getEmGain(), borders, random,
-		    					psSet.getElectronPerAdCount(), psSet.getFrameRate(), psSet.getMeanBlinkingTime(), psSet.getDeadTime(), psSet.getWindowsizePSF(),
-		    					modelNumber,psSet.getQuantumEfficiency(), psSet.getNa(), psSet.getPsfwidth(), psSet.getFokus(), psSet.getDefokus(), psSet.getSigmaBg(),
-		    					psSet.getConstOffset(), psSet.getCalibrationFile(), fullpath+"/tiffstack.tiff",psSet.isEnsureSinglePSF(), psSet.isDistributePSFoverFrames(),new CreateTiffStack(null, null, null, null));
-		    			*/
-		    		}
-		    		
-        		}
-        	}
-        }
+		    		//create SwingWorker
+		    		BatchProcessor p = new BatchProcessor(fullpath, allDataSets.get(j), conf.output_tiffstack, conf.reproducible, conf.viewstatus, conf.shifts);
+		    		runs.add(p);
+		    		runs.get(runs.size()-1).execute();
+		    	
+	    		}
+				
+				boolean running = true;
+				while(running) {
+					running = false;
+					try {
+						Thread.sleep(100);
+						// System.out.println(calc.isCancelled()+" "+calc.isDone());
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					for(int m=0;m<runs.size();m++) {
+						if (!runs.get(m).isDone()) {
+							running = true;
+							break;
+						}
+					}
+				}
+	    	}
+	    }
+	}
+	
+	//visualize current drawing process
+	public void batchproc_draw(DataSet currset) {
+		List<DataSet> sets = new ArrayList<DataSet>();
+		currset.setProgressBar(this.progressBar);
+		sets.add(currset);
+		currset.getParameterSet().setGeneralVisibility(Boolean.TRUE);
+
+		//model.data.clear();
+		//model.data.addAll(allDataSets);
+		//updateMinMax(); //may we have to do something here
+
+		
+		plot.showBox = chckbxShowAxes.isSelected();
+		plot.showTicks = chckbxShowTicks.isSelected();
+		plot.backgroundColor = new org.jzy3d.colors.Color(backgroundColor.getRed(), backgroundColor.getGreen(),
+				backgroundColor.getBlue());
+		plot.mainColor = new org.jzy3d.colors.Color(mainColor.getRed(), mainColor.getGreen(), mainColor.getBlue());
+		plot.dataSets.clear();
+		plot.addAllDataSets(sets);
+		plotPanel.removeAll();
+		nt = new CreatePlot(plot);
+		nt.addPropertyChangeListener(this);
+		nt.addListener((ThreadCompleteListener) this);
+		// nt.addPropertyChangeListener(this);
+
+//			calc = new STORMCalculator(this.allDataSets.get(currentRow), random);
+//			calc.execute();
+		progressBar.setToolTipText("Visualizing...");
+		nt.execute();
+
+//			plot.dataSets.clear();
+//			plot.addAllDataSets(sets);
+//			plotPanel.removeAll();
+//			plot.createChart();
+//			graphComponent = (Component) plot.createChart().getCanvas();
+//			plotPanel.add(graphComponent);
+//			plotPanel.revalidate();
+//			plotPanel.repaint();
+//			graphComponent.revalidate();
+//			Thread t = new Thread(){
+//			@Override
+//				public void run(){
+//					plot.run();
+//				}
+//			};
+		try {
+			Thread.sleep(100);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+//			t.start();
+
+	}
+	
+	public void batchproc_draw_empty() {
+		plot.dataSets.clear();
+		plotPanel.removeAll();
+		plotPanel.add(loadDataLabel);
+		plotPanel.revalidate();
+		plotPanel.repaint();
 	}
 
 }

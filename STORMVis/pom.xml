@@ -148,7 +148,7 @@
               <finalName>suresim_batchprocessing.jar</finalName>
               <archive>
                 <manifest>
-                  <mainClass>batchProcessing.BatchProcessing</mainClass>
+                  <mainClass>batchProcessing.Batchproc</mainClass>
                 </manifest>
               </archive>
               <descriptorRefs>

@@ -36,7 +36,7 @@ import model.LineDataSet;
 import model.ParameterSet;
 import model.TriangleDataSet;
 
-public class BatchProcessing {
+public class Batchproc {
 	private static Random random;
 	static ArrayList<DataSet> allDataSets = new ArrayList<DataSet>();
 	static BatchConfig conf = new BatchConfig();
@@ -115,77 +115,36 @@ public class BatchProcessing {
         //do stuff and call STORM calculator
         for(int i=0;i<params.size();i++){
     		for(int r=0;r<conf.repeat_experiment;r++){
-    			ArrayList<STORMCalculator> runs = new ArrayList<STORMCalculator>();
+    			ArrayList<BatchProcessor> runs = new ArrayList<BatchProcessor>();
     			for(int j=0;j<allDataSets.size();j++){
-        			setUpRandomNumberGenerator(conf.reproducible);
 		    		allDataSets.get(j).setParameterSet(params.get(i)); //set new parameters to model
 		    		//create new directory for this run
 		    		String fullpath = String.format("%s/model%d/set%d/run%d", base_path, j, i, r);
-		    		(new File(fullpath)).mkdirs();
 		    		
-		    		
-		    		//do calculation
-		    		allDataSets.get(j).setProgressBar(new JProgressBar());
-		    		STORMCalculator calc = new STORMCalculator(allDataSets.get(j), random);
-		    		//runs.add(calc);
-		    		calc.execute();
-		    		while (!calc.isDone()) {
-		    			try {
-		    				Thread.sleep(100);
-		    				// System.out.println(calc.isCancelled()+" "+calc.isDone());
-		    			} catch (InterruptedException e) {
-		    				// TODO Auto-generated catch block
-		    				e.printStackTrace();
-		    			}
-		    		}
-		    		DataSet thisDataSet = calc.getCurrentDataSet();
-		    		//ArrayList<Float> borders = conf.borders;
-		    		ArrayList<Float> borders = new ArrayList<Float>();
-		    		//if(conf.borders.size()!=6){
-	    			borders.add(Calc.min(thisDataSet.stormData, 0));
-	    			borders.add(Calc.max(thisDataSet.stormData, 0));
-	    			borders.add(Calc.min(thisDataSet.stormData, 1));
-	    			borders.add(Calc.max(thisDataSet.stormData, 1));
-	    			borders.add(Calc.min(thisDataSet.stormData, 2));
-	    			borders.add(Calc.max(thisDataSet.stormData, 2));
-		    		//}
-		    		
-		    		//save output
-		    		FileManager.ExportToFile(calc.getCurrentDataSet(), fullpath+"/plain.tif", conf.viewstatus, borders, 
-		    				params.get(i).getPixelsize(), params.get(i).getSigmaRendering(), conf.shifts);
-		    		
-		    		
-		    		//if needed create tiffstack here
-		    		
-		    		if(conf.output_tiffstack){
-		    			allDataSets.get(j).setProgressBar(new JProgressBar());
-		    			allDataSets.get(j).getParameterSet().setSxy(0.0f);
-		    			allDataSets.get(j).getParameterSet().setSz(0.0f);
-		    			calc = new STORMCalculator(allDataSets.get(j), random);
-			    		calc.execute();
-			    		while (!calc.isDone()) {
-			    			try {
-			    				Thread.sleep(100);
-			    				// System.out.println(calc.isCancelled()+" "+calc.isDone());
-			    			} catch (InterruptedException e) {
-			    				// TODO Auto-generated catch block
-			    				e.printStackTrace();
-			    			}
-			    		}
-			    		thisDataSet = calc.getCurrentDataSet();
-		    			ParameterSet psSet = thisDataSet.getParameterSet();
-		    			int modelNumber = 2;
-		    			if (psSet.isTwoDPSF()){
-		    				modelNumber  = 1;
-		    			}
-		    			CreateStack.createTiffStack(thisDataSet.stormData, 1/psSet.getPixelToNmRatio(),
-		    					psSet.getEmptyPixelsOnRim(),psSet.getEmGain(), borders, random,
-		    					psSet.getElectronPerAdCount(), psSet.getFrameRate(), psSet.getMeanBlinkingTime(), psSet.getDeadTime(), psSet.getWindowsizePSF(),
-		    					modelNumber,psSet.getQuantumEfficiency(), psSet.getNa(), psSet.getPsfwidth(), psSet.getFokus(), psSet.getDefokus(), psSet.getSigmaBg(),
-		    					psSet.getConstOffset(), psSet.getCalibrationFile(), fullpath+"/tiffstack.tiff",psSet.isEnsureSinglePSF(), psSet.isDistributePSFoverFrames(),new CreateTiffStack(null, null, null, null));
-		    		}
-		    		
+		    		//create SwingWorker
+		    		BatchProcessor p = new BatchProcessor(fullpath, allDataSets.get(j), conf.output_tiffstack, conf.reproducible, conf.viewstatus, conf.shifts);
+		    		runs.add(p);
+		    		runs.get(runs.size()-1).execute();
+		    	
         		}
+    			
+    			boolean running = true;
+    			while(running) {
+    				running = false;
+    				try {
+    					Thread.sleep(100);
+    					// System.out.println(calc.isCancelled()+" "+calc.isDone());
+    				} catch (InterruptedException e) {
+    					// TODO Auto-generated catch block
+    					e.printStackTrace();
+    				}
+    				for(int m=0;m<runs.size();m++) {
+    					if (!runs.get(m).isDone()) {
+    						running = true;
+    						break;
+    					}
+    				}
+    			}
         	}
         }
 	}
@@ -215,11 +174,4 @@ public class BatchProcessing {
 		allDataSets.add(data);
 	}
 	
-	private static void setUpRandomNumberGenerator(boolean makeItReproducible) {
-		if (makeItReproducible) {
-			random = new Random(2);
-		} else {
-			random = new Random(System.currentTimeMillis());
-		}
-	}
 }
