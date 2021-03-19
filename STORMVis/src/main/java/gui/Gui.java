@@ -2857,41 +2857,8 @@ public class Gui extends JFrame implements TableModelListener, PropertyChangeLis
         	proceedFileImport(f);
         }
         
-	    //do stuff and call STORM calculator
-	    for(int i=0;i<params.size();i++){
-			for(int r=0;r<conf.repeat_experiment;r++){
-				ArrayList<BatchProcessor> runs = new ArrayList<BatchProcessor>();
-				for(int j=0;j<allDataSets.size();j++){
-		    		allDataSets.get(j).setParameterSet(params.get(i)); //set new parameters to model
-		    		//create new directory for this run
-		    		String fullpath = String.format("%s/model%d/set%d/run%d", base_path, j, i, r);
-		    		
-		    		//create SwingWorker
-		    		BatchProcessor p = new BatchProcessor(fullpath, allDataSets.get(j), conf.output_tiffstack, conf.reproducible, conf.viewstatus, conf.shifts);
-		    		runs.add(p);
-		    		runs.get(runs.size()-1).execute();
-		    	
-	    		}
-				
-				boolean running = true;
-				while(running) {
-					running = false;
-					try {
-						Thread.sleep(100);
-						// System.out.println(calc.isCancelled()+" "+calc.isDone());
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					for(int m=0;m<runs.size();m++) {
-						if (!runs.get(m).isDone()) {
-							running = true;
-							break;
-						}
-					}
-				}
-	    	}
-	    }
+        //create BatchProcessor and do stuff ....
+        BatchProcessor proc = new BatchProcessor(allDataSets, conf, 10, this);
 	}
 	
 	//visualize current drawing process

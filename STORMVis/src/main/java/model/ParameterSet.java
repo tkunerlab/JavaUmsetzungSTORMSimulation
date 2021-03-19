@@ -236,6 +236,76 @@ public class ParameterSet implements Serializable {
 		this.useSTORMBlinking = true;
     }
     
+    public ParameterSet(ParameterSet other) {
+    	super();
+    	this.loa = other.loa;
+    	this.aoa = other.aoa;
+    	this.soa = other.soa;
+    	this.bspnm = other.bspnm;
+    	this.pabs = other.pabs;
+    	this.abpf = other.abpf;
+    	this.rof = other.rof;
+    	this.fpab = other.fpab;
+    	this.sxy = other.sxy;
+    	this.sz = other.sz;
+    	this.doc = other.doc;
+    	this.nocpsmm = other.nocpsmm;
+    	this.docpsnm = other.docpsnm;
+    	this.bd = other.bd;
+    	this.bspsnm = other.bspsnm;
+    	this.frames = other.frames;
+    	this.dutyCycle = other.dutyCycle;
+    	this.kOff = other.kOff;
+    	this.deff = other.deff;
+    	this.bleachConst = other.bleachConst;
+    	this.meanPhotonNumber = other.meanPhotonNumber;
+    	
+    	this.generalVisibility = other.generalVisibility;
+    	this.emVisibility = other.emVisibility;
+    	this.stormVisibility = other.stormVisibility;
+    	this.antibodyVisibility = other.antibodyVisibility;
+    	
+    	this.ilpmm3 = other.ilpmm3;
+    	this.psfwidth = other.psfwidth;
+    	
+    	this.applyBleaching = other.applyBleaching;
+    	this.mergedPSF = other.mergedPSF;
+    	this.coupleSigmaIntensity = other.coupleSigmaIntensity;
+    	
+    	this.pointSize = other.pointSize;
+    	this.lineWidth = other.lineWidth;
+    	
+    	this.emColor = other.emColor; //awt.Color is immutable
+    	this.stormColor = other.stormColor;
+    	this.antibodyColor = other.antibodyColor;
+    	
+    	this.pixelsize = other.pixelsize;
+    	this.sigmaRendering = other.sigmaRendering;
+    	
+    	this.pixelToNmRatio = other.pixelToNmRatio;
+    	this.frameRate = other.frameRate;
+    	this.sigmaBg = other.sigmaBg;
+    	this.constOffset = other.constOffset;
+    	this.emGain = other.emGain;
+    	this.quantumEfficiency = other.quantumEfficiency;
+    	this.windowsizePSF = other.windowsizePSF;
+    	this.emptyPixelsOnRim = other.emptyPixelsOnRim;
+    	this.na = other.na;
+    	this.fokus = other.fokus;
+    	this.defokus = other.defokus;
+    	this.twoDPSF = other.twoDPSF;
+    	this.electronPerAdCount = other.electronPerAdCount;
+    	this.meanBlinkingTime = other.meanBlinkingTime;
+    	this.ensureSinglePSF = other.ensureSinglePSF;
+    	this.distributePSFoverFrames = other.distributePSFoverFrames;
+    	this.minIntensity = other.minIntensity;
+    	this.borders = new ArrayList<Float>(other.getBorders()); //deepcopy
+    	this.deadTime = other.deadTime;
+    	this.colorProof = other.colorProof;
+    	
+    	this.useSTORMBlinking = other.useSTORMBlinking;
+    }
+    
     public boolean isUseSTORMBlinking(){
     	return useSTORMBlinking;
     }

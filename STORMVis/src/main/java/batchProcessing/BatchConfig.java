@@ -88,6 +88,9 @@ public class BatchConfig {
 	public float[] shifts = {0 , 0, 0};
 	public ArrayList<Float> borders = new ArrayList<Float>();
 	
+	public BatchConfig() {
+	}
+	
 	public boolean load(String path) {
 		//try to open file
 		Scanner sc;
