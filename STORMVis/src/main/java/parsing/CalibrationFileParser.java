@@ -43,7 +43,7 @@ public class CalibrationFileParser {
         		calib.add(tmp);
         	}
         	else{
-        		System.err.println("Data formate of calibration file not understood. A Z calibration file is a plain text file with three whitespace-separated columns. "
+        		System.err.println("Data format of calibration file not understood. A Z calibration file is a plain text file with three whitespace-separated columns. "
         				+ "The first column gives an emitter's Z coordinate in nanometres, and the second and third columns give the standard deviation of a Gaussian "
         				+ "describing the PSF for an emitter at the given Z coordinate.");
         	}

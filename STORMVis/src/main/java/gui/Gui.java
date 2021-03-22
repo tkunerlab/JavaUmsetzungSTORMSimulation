@@ -2858,7 +2858,12 @@ public class Gui extends JFrame implements TableModelListener, PropertyChangeLis
         }
         
         //create BatchProcessor and do stuff ....
-        BatchProcessor proc = new BatchProcessor(allDataSets, conf, 10, this);
+        BatchProcessor proc = new BatchProcessor(allDataSets, conf, conf.num_threads, this);
+        long start = System.nanoTime();
+        proc.run();
+        long end = System.nanoTime();
+        System.out.println("----------------------------------");
+        System.out.println("Time taken (Batchprocesing): " + (end-start)/1e9 +"s");
 	}
 	
 	//visualize current drawing process

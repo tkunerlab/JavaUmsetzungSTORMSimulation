@@ -2,18 +2,15 @@ package batchProcessing;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Scanner;
 
-import inout.SimulationParameterData;
-import inout.SimulationParameterIO;
 import model.ParameterSet;
+import parsing.CalibrationFileParser;
 
 import javax.swing.JOptionPane;
 
-import gui.DataTypeDetector.DataType;
 
 class BatchParameter {
 	public String name = "";
@@ -78,9 +75,9 @@ public class BatchConfig {
 	public String out_path = "";
 	public ArrayList<String> models = new ArrayList<String>();
 	public int repeat_experiment = 1;				//how often should a single parameter combo be simulated
-	public boolean output_rendering = true;
 	public boolean output_tiffstack = true;
-	public String calibration_file = "";
+	public float[][] calibration_file = null;
+	public int num_threads = 1;
 	public ArrayList<BatchParameter> parameters = new ArrayList<BatchParameter>();
 	public int total_combos = 1;
 	public boolean reproducible = true;
@@ -161,25 +158,12 @@ public class BatchConfig {
 						} else {
 							JOptionPane.showMessageDialog(null,"Output path is not given within \"!\n Using default", "Malformatted Input", JOptionPane.ERROR_MESSAGE);
 						}
-					} else if(line.contains("OutputRendering")) {
-						String sub = line.substring(pos+1);
-						sub = sub.replaceAll(" ", "");
-						sub = sub.replaceAll("\t", "");
-						this.output_rendering = (Integer.parseInt(sub)>0);
-					} else if(line.contains("OutputTiffStack")) {
+					}  else if(line.contains("OutputTiffStack")) {
 						String sub = line.substring(pos+1);
 						sub = sub.replaceAll(" ", "");
 						sub = sub.replaceAll("\t", "");
 						this.output_tiffstack = (Integer.parseInt(sub)>0);
-					} else if(line.contains("CalibrationFile")) {
-						pos = line.indexOf('\"');
-						int pos2 = line.indexOf('\"', pos+1);
-						if(pos2-pos>0) {
-							this.calibration_file = line.substring(pos+1, pos2);
-						} else {
-							JOptionPane.showMessageDialog(null,"CalibrationFile path is not given within \"!\n Using none", "Malformatted Input", JOptionPane.ERROR_MESSAGE);
-						}
-					}
+					} 
 					
 				} else if(section.equals("Simulation") && !no_end_triggered){
 					pos = line.indexOf('=');
@@ -223,14 +207,50 @@ public class BatchConfig {
 						pos = line.indexOf('\"');
 						int pos2 = line.indexOf('\"', pos+1);
 						if(pos2-pos>0) {
-							String cpath = line.substring(pos+1, pos2);
-							//lets try to open calibration file
+							String sub = line.substring(pos+1, pos2);
+							
+							System.out.println(sub);
+							CalibrationFileParser parser = new CalibrationFileParser(sub);
+							try {
+								this.calibration_file = parser.parse();
+							} catch(IOException e) {
+								e.printStackTrace();
+							}
 							
 							
 						} else {
 							JOptionPane.showMessageDialog(null,"Calibration filepath is not given within \"!\n Using default", "Malformatted Input", JOptionPane.ERROR_MESSAGE);
 						}
-					}
+					} else if(line.contains("NumThreads")) {
+						String sub = line.substring(pos+1);
+						sub = sub.replaceAll(" ", "");
+						sub = sub.replaceAll("\t", "");
+						this.num_threads = Integer.parseInt(sub);
+					}/*else if(line.contains("Borders")) {
+						pos = line.indexOf('[');
+						int pos2 = line.lastIndexOf(']');
+						String sub = line.substring(pos+1, pos2);
+						String[] substrings = sub.split(";");
+						for(String string: substrings) {
+							pos = string.indexOf('[');
+							pos2 = string.indexOf(']');
+							if (pos2-pos>0) {
+								sub = string.substring(pos+1, pos2);
+								String[] substrings2 = sub.split(",");
+								if(substrings2.length != 6) {
+									for(String str: substrings2) {
+										
+									}
+								} else {
+									JOptionPane.showMessageDialog(null,"Boders element must have 6 coordinates in total]!\n Aborting ...", "Malformatted Input", JOptionPane.ERROR_MESSAGE);
+									System.exit(-1);
+								}
+							} else {
+								JOptionPane.showMessageDialog(null,"Boders element is not closed with ]!\n Aborting ...", "Malformatted Input", JOptionPane.ERROR_MESSAGE);
+								System.exit(-1);
+							}
+						}
+					}*/
 				} else {
 					JOptionPane.showMessageDialog(null,"Section does not exist!\n Aborting ...", "Malformatted Input", JOptionPane.ERROR_MESSAGE);
 					System.exit(-1);
@@ -302,6 +322,9 @@ public class BatchConfig {
 		ArrayList<ParameterSet> pset = new ArrayList<ParameterSet>();
 		for(int j=0;j<this.total_combos;j++) {
 			ParameterSet p = new ParameterSet();
+			if(this.calibration_file != null) {
+				p.setCalibrationFile(this.calibration_file);
+			}
 			for(int i=0;i<this.parameters.size();i++) {
 				Float c = combos[i][j];
 				switch(this.parameters.get(i).name) {

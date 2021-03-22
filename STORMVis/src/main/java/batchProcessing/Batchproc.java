@@ -93,8 +93,12 @@ public class Batchproc {
         }
         
         //create BatchProcessor and do stuff ....
-        BatchProcessor proc = new BatchProcessor(allDataSets, conf, 10, null);
+        BatchProcessor proc = new BatchProcessor(allDataSets, conf, conf.num_threads, null);
+        long start = System.nanoTime();
         proc.run();
+        long end = System.nanoTime();
+        System.out.println("----------------------------------");
+        System.out.println("Time taken (Batchprocesing): " + (end-start)/1e9 +"s");
 	}
 	
 	static private void load_model(File file){

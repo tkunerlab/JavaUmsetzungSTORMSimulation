@@ -141,5 +141,9 @@ public class BatchCalc extends Thread {
 			this.random = new Random(System.currentTimeMillis());
 		}
 	}
+	
+	public void saveparameters() {
+		
+	}
 
 }

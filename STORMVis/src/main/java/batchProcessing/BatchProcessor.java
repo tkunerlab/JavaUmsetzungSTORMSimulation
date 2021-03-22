@@ -7,6 +7,8 @@ import model.DataSet;
 import model.ParameterSet;
 import model.TriangleDataSet;
 import model.LineDataSet;
+import model.PointsOnlyDataSet;
+import model.EpitopeDataSet;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -65,8 +67,9 @@ public class BatchProcessor{
 		ArrayList<ParameterSet> params = this.config.convertToParamterSet();
 		
 
-		ArrayList<BatchCalc> runs = new ArrayList<BatchCalc>();		
-		
+		ArrayList<BatchCalc> runs = new ArrayList<BatchCalc>();	
+		ArrayList<Integer> modelindices = new ArrayList<Integer>();
+		long lastupdate = System.nanoTime();
 		for(int i=0;i<params.size();i++){
 			for(int j=0;j<allDataSets.size();j++){
 	    		//create new directory for this run
@@ -76,6 +79,7 @@ public class BatchProcessor{
 	    		
 	    		runs.add(new BatchCalc(fullpath, pdata, ptemp, this.config.output_tiffstack, this.config.reproducible, this.config.viewstatus,
 	    				this.config.shifts, this.config.repeat_experiment));
+	    		modelindices.add(j);
 	    		runs.get(runs.size()-1).start();
 	    		
 	    		//check if we exceed the maximum number of allowed threads.
@@ -105,8 +109,37 @@ public class BatchProcessor{
 	    			
 	    			//this is the best time to send updates to the GUI and remove finished threads
 	    			//do stuff to GUI
+	    			if(this.reference_gui != null) {
+	    				double diff = (System.nanoTime()-lastupdate)/1e9; //
+	    				if(diff>= 5) {
+	    					//take one of the finished threads and use the data to update the GUI
+	    					if(completed.size()>0) {
+	    						DataSet dset = runs.get(completed.get(0).intValue()).getCurrentDataSet();
+	    						int ind = modelindices.get(completed.get(0).intValue());
+	    						//copy datasetpoints
+	    						if(dset.stormData != null) {
+	    							this.allDataSets.get(ind).stormData = Arrays.stream(dset.stormData).map(float[]::clone).toArray(float[][]::new); //some Java 8 magic
+	    						} 
+	    						if(dset.antiBodyStartPoints != null) {
+	    							this.allDataSets.get(ind).antiBodyStartPoints = Arrays.stream(dset.antiBodyStartPoints).map(float[]::clone).toArray(float[][]::new);
+	    						} 
+	    						if(dset.antiBodyEndPoints != null) {
+	    							this.allDataSets.get(ind).antiBodyEndPoints = Arrays.stream(dset.antiBodyEndPoints).map(float[]::clone).toArray(float[][]::new);
+	    						} 
+	    						if(dset.fluorophorePos != null) {
+	    							this.allDataSets.get(ind).fluorophorePos = Arrays.stream(dset.fluorophorePos).map(float[]::clone).toArray(float[][]::new);
+	    						}
+	    						//call to update GUI
+	    						this.reference_gui.setSelectedListsForDrawing();
+	    						//System.out.println("Update GUI!!!");
+	    						lastupdate = System.nanoTime();
+	    					}
+	    				}
+	    			}
+	    			
 	    			for(int k=completed.size()-1;k>=0;k--) {
 	    				runs.remove(completed.get(k).intValue());
+	    				modelindices.remove(completed.get(k).intValue());
 	    			}
 	    			
 	    		}
@@ -185,6 +218,7 @@ public class BatchProcessor{
 					
 					return dnew;
 				}
+			case PLY:
 			case TRIANGLES: {
 					TriangleDataSet dnew = new TriangleDataSet(new ParameterSet(reference.getParameterSet()));
 					//copy plain dataset fields
@@ -240,6 +274,108 @@ public class BatchProcessor{
 					
 					return dnew;
 				}
+			case POINTS:
+			{
+				PointsOnlyDataSet dnew = new PointsOnlyDataSet(new ParameterSet(reference.getParameterSet()));
+				//copy plain dataset fields
+				dnew.name = reference.name;
+				dnew.color = reference.color;
+				if(reference.stormData != null) {
+					dnew.stormData = Arrays.stream(reference.stormData).map(float[]::clone).toArray(float[][]::new); //some Java 8 magic
+				} else {
+					dnew.stormData = null;
+				}
+				if(reference.antiBodyStartPoints != null) {
+					dnew.antiBodyStartPoints = Arrays.stream(reference.antiBodyStartPoints).map(float[]::clone).toArray(float[][]::new);
+				} else {
+					dnew.antiBodyStartPoints = null;
+				}
+				if(reference.antiBodyEndPoints != null) {
+					dnew.antiBodyEndPoints = Arrays.stream(reference.antiBodyEndPoints).map(float[]::clone).toArray(float[][]::new);
+				} else {
+					dnew.antiBodyEndPoints = null;
+				}
+				if(reference.fluorophorePos != null) {
+					dnew.fluorophorePos = Arrays.stream(reference.fluorophorePos).map(float[]::clone).toArray(float[][]::new);
+				} else {
+					dnew.fluorophorePos = null;
+				}
+				dnew.progressBar = new JProgressBar();
+				
+				return dnew;
+			}
+			case EPITOPES:
+			{
+				EpitopeDataSet dnew = new EpitopeDataSet(new ParameterSet(reference.getParameterSet()));
+				//copy plain dataset fields
+				dnew.name = reference.name;
+				dnew.color = reference.color;
+				if(reference.stormData != null) {
+					dnew.stormData = Arrays.stream(reference.stormData).map(float[]::clone).toArray(float[][]::new); //some Java 8 magic
+				} else {
+					dnew.stormData = null;
+				}
+				if(reference.antiBodyStartPoints != null) {
+					dnew.antiBodyStartPoints = Arrays.stream(reference.antiBodyStartPoints).map(float[]::clone).toArray(float[][]::new);
+				} else {
+					dnew.antiBodyStartPoints = null;
+				}
+				if(reference.antiBodyEndPoints != null) {
+					dnew.antiBodyEndPoints = Arrays.stream(reference.antiBodyEndPoints).map(float[]::clone).toArray(float[][]::new);
+				} else {
+					dnew.antiBodyEndPoints = null;
+				}
+				if(reference.fluorophorePos != null) {
+					dnew.fluorophorePos = Arrays.stream(reference.fluorophorePos).map(float[]::clone).toArray(float[][]::new);
+				} else {
+					dnew.fluorophorePos = null;
+				}
+				dnew.progressBar = new JProgressBar();
+				
+				EpitopeDataSet dset = (EpitopeDataSet)reference;
+				if(dset.epitopeBase != null) {
+					dnew.epitopeBase = Arrays.stream(dset.epitopeBase).map(float[]::clone).toArray(float[][]::new);
+				} else {
+					dnew.epitopeBase = null;
+				}
+				if(dset.epitopeEnd != null) {
+					dnew.epitopeEnd = Arrays.stream(dset.epitopeEnd).map(float[]::clone).toArray(float[][]::new);
+				} else {
+					dnew.epitopeEnd = null;
+				}
+				
+				return dnew;
+			}
+			case UNKNOWN:
+			{
+				DataSet dnew = new DataSet(new ParameterSet(reference.getParameterSet()));
+				//copy plain dataset fields
+				dnew.name = reference.name;
+				dnew.color = reference.color;
+				if(reference.stormData != null) {
+					dnew.stormData = Arrays.stream(reference.stormData).map(float[]::clone).toArray(float[][]::new); //some Java 8 magic
+				} else {
+					dnew.stormData = null;
+				}
+				if(reference.antiBodyStartPoints != null) {
+					dnew.antiBodyStartPoints = Arrays.stream(reference.antiBodyStartPoints).map(float[]::clone).toArray(float[][]::new);
+				} else {
+					dnew.antiBodyStartPoints = null;
+				}
+				if(reference.antiBodyEndPoints != null) {
+					dnew.antiBodyEndPoints = Arrays.stream(reference.antiBodyEndPoints).map(float[]::clone).toArray(float[][]::new);
+				} else {
+					dnew.antiBodyEndPoints = null;
+				}
+				if(reference.fluorophorePos != null) {
+					dnew.fluorophorePos = Arrays.stream(reference.fluorophorePos).map(float[]::clone).toArray(float[][]::new);
+				} else {
+					dnew.fluorophorePos = null;
+				}
+				dnew.progressBar = new JProgressBar();
+				
+				return dnew;
+			}
 			default: {
 				return null;
 			}
