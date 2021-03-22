@@ -236,6 +236,7 @@ public class ParameterSet implements Serializable {
 		this.useSTORMBlinking = true;
     }
     
+    //copy constructor
     public ParameterSet(ParameterSet other) {
     	super();
     	this.loa = other.loa;
@@ -299,7 +300,13 @@ public class ParameterSet implements Serializable {
     	this.ensureSinglePSF = other.ensureSinglePSF;
     	this.distributePSFoverFrames = other.distributePSFoverFrames;
     	this.minIntensity = other.minIntensity;
-    	this.borders = new ArrayList<Float>(other.getBorders()); //deepcopy
+    	if (other.borders != null) {
+    		this.borders = new ArrayList<Float>(other.borders);
+    	}
+    	if(other.calibrationFile != null) {
+    		this.calibrationFile = Arrays.stream(other.calibrationFile).map(float[]::clone).toArray(float[][]::new);
+    	}
+    	
     	this.deadTime = other.deadTime;
     	this.colorProof = other.colorProof;
     	

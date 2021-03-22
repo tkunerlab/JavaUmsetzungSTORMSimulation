@@ -3,6 +3,7 @@ package batchProcessing;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.Arrays;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -38,7 +39,7 @@ public class BatchCalc extends Thread {
 	   
 	public BatchCalc(String basepath, DataSet dataset, ParameterSet parameters, boolean tiff_out, boolean reproducible, int viewstatus, float[] shifts, int repeats) {
 		this.basepath = basepath;
-		this.dataset = dataset_deepcopy(dataset);
+		this.dataset = dataset;
 		this.parameters = parameters;
 		this.viewstatus = viewstatus;
 		this.shifts = shifts;
@@ -53,7 +54,7 @@ public class BatchCalc extends Thread {
 	}
 
 	public void setCurrentDataSet(DataSet currentDataSet) {
-		this.dataset = dataset_deepcopy(dataset);
+		this.dataset = currentDataSet;
 	}
 
 	@Override
@@ -71,11 +72,15 @@ public class BatchCalc extends Thread {
 	}
 	
 	public void doSimulation() {
+		float sxy = this.parameters.getSxy();
+		float sz = this.parameters.getSz();
 		for(int r=0;r<this.repeats;r++) {
 			String fullpath = this.basepath + File.separator;
 			fullpath = String.format("%srun%d", fullpath, r);
 			(new File(fullpath)).mkdirs(); //create new directory
 			setUpRandomNumberGenerator(this.reproducible);
+			this.dataset.getParameterSet().setSxy(sxy); //BE CAREFUL we alter the origin
+			this.dataset.getParameterSet().setSz(sz);
 			this.dataset.setParameterSet(this.parameters);
 			STORMCalculator calc = new STORMCalculator(this.dataset, this.random);
 			calc.doSimulation();
@@ -98,9 +103,9 @@ public class BatchCalc extends Thread {
 			//to create tiffstack we need to do simulation again but with localization precision of 0nm
 			if(this.output_tiffstack){
 				setUpRandomNumberGenerator(this.reproducible);
-				this.dataset.setParameterSet(this.parameters);
 				this.dataset.getParameterSet().setSxy(0.0f); //BE CAREFUL we alter the origin
 				this.dataset.getParameterSet().setSz(0.0f);
+				this.dataset.setParameterSet(this.parameters);
 				calc = new STORMCalculator(this.dataset, this.random);
 				calc.doSimulation();
 				
@@ -135,13 +140,6 @@ public class BatchCalc extends Thread {
 		} else {
 			this.random = new Random(System.currentTimeMillis());
 		}
-	}
-	
-	private DataSet dataset_deepcopy(DataSet reference) {
-		DataSet newDataSet = new DataSet(new ParameterSet(reference.getParameterSet()), reference.name);
-		//copy rest
-		
-		return newDataSet;
 	}
 
 }

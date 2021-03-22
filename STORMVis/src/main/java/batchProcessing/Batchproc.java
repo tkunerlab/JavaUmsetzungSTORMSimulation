@@ -94,16 +94,7 @@ public class Batchproc {
         
         //create BatchProcessor and do stuff ....
         BatchProcessor proc = new BatchProcessor(allDataSets, conf, 10, null);
-        proc.execute();
-        while (!proc.isDone()) {
-			try {
-				Thread.sleep(100);
-				// System.out.println(calc.isCancelled()+" "+calc.isDone());
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
+        proc.run();
 	}
 	
 	static private void load_model(File file){
