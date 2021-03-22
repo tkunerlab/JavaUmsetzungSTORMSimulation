@@ -79,10 +79,11 @@
         <artifactId>commons-cli</artifactId>
         <version>1.4</version>
     </dependency>
+
   </dependencies>
   <properties>
-    <maven.compiler.source>7</maven.compiler.source>
-    <maven.compiler.target>1.7</maven.compiler.target>
+    <maven.compiler.source>8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
   </properties>
   <build>
     <plugins>
@@ -105,30 +106,6 @@
                   <filtering>true</filtering>
                 </resource>
               </resources>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-assembly-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>command-line-interface</id>
-            <phase>package</phase>
-            <goals>
-              <goal>single</goal>
-            </goals>
-            <configuration>
-              <finalName>suresim_cli.jar</finalName>
-              <archive>
-                <manifest>
-                  <mainClass>cli.CLI</mainClass>
-                </manifest>
-              </archive>
-              <descriptorRefs>
-                <descriptorRef>jar-with-dependencies</descriptorRef>
-              </descriptorRefs>
             </configuration>
           </execution>
         </executions>
@@ -158,6 +135,16 @@
           </execution>
         </executions>
       </plugin>
+      
+        <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>2.3.2</version>
+        <configuration>
+            <encoding>Cp1252</encoding>
+        </configuration> 
+        </plugin>
+      
     </plugins>
   </build>
 </project>

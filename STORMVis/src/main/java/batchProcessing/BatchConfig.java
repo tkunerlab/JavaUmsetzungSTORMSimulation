@@ -206,7 +206,7 @@ public class BatchConfig {
 					} else if(line.contains("CalibrationFile")) {
 						pos = line.indexOf('\"');
 						int pos2 = line.indexOf('\"', pos+1);
-						if(pos2-pos>0) {
+						if(pos2-pos>1) {
 							String sub = line.substring(pos+1, pos2);
 							
 							System.out.println(sub);
@@ -218,8 +218,9 @@ public class BatchConfig {
 							}
 							
 							
-						} else {
+						} else if(pos2-pos<0) {
 							JOptionPane.showMessageDialog(null,"Calibration filepath is not given within \"!\n Using default", "Malformatted Input", JOptionPane.ERROR_MESSAGE);
+							System.exit(-1);
 						}
 					} else if(line.contains("NumThreads")) {
 						String sub = line.substring(pos+1);

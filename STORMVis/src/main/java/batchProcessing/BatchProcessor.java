@@ -130,8 +130,16 @@ public class BatchProcessor{
 	    							this.allDataSets.get(ind).fluorophorePos = Arrays.stream(dset.fluorophorePos).map(float[]::clone).toArray(float[][]::new);
 	    						}
 	    						//call to update GUI
-	    						this.reference_gui.setSelectedListsForDrawing();
-	    						//System.out.println("Update GUI!!!");
+	    						this.allDataSets.get(ind).getParameterSet().setGeneralVisibility(true);
+	    						for(int a=0;a<this.allDataSets.size();a++) {
+	    							if(a==ind) {
+	    								continue;
+	    							}
+	    							this.allDataSets.get(a).getParameterSet().setGeneralVisibility(false);
+	    						}
+	    						System.out.println("Update GUI!!!");
+	    						//this.reference_gui.batchproc_draw();
+	    						
 	    						lastupdate = System.nanoTime();
 	    					}
 	    				}

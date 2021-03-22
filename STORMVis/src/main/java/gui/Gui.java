@@ -2867,57 +2867,44 @@ public class Gui extends JFrame implements TableModelListener, PropertyChangeLis
 	}
 	
 	//visualize current drawing process
-	public void batchproc_draw(DataSet currset) {
+	public void batchproc_draw() {
 		List<DataSet> sets = new ArrayList<DataSet>();
-		currset.setProgressBar(this.progressBar);
-		sets.add(currset);
-		currset.getParameterSet().setGeneralVisibility(Boolean.TRUE);
-
-		//model.data.clear();
-		//model.data.addAll(allDataSets);
-		//updateMinMax(); //may we have to do something here
-
-		
+		model.visibleSets.clear();
+		for (int i = 0; i < allDataSets.size(); i++) {
+			allDataSets.get(currentRow).setProgressBar(progressBar);
+			if (allDataSets.get(i).getParameterSet().getGeneralVisibility() == true) {
+				model.visibleSets.add(Boolean.TRUE);
+				sets.add(model.data.get(i));
+			} else {
+				model.visibleSets.add(Boolean.FALSE);
+			}
+		}
+		model.data.clear();
+		model.data.addAll(allDataSets);
+		plot.squared = false;
 		plot.showBox = chckbxShowAxes.isSelected();
 		plot.showTicks = chckbxShowTicks.isSelected();
 		plot.backgroundColor = new org.jzy3d.colors.Color(backgroundColor.getRed(), backgroundColor.getGreen(),
 				backgroundColor.getBlue());
 		plot.mainColor = new org.jzy3d.colors.Color(mainColor.getRed(), mainColor.getGreen(), mainColor.getBlue());
-		plot.dataSets.clear();
-		plot.addAllDataSets(sets);
-		plotPanel.removeAll();
-		nt = new CreatePlot(plot);
-		nt.addPropertyChangeListener(this);
-		nt.addListener((ThreadCompleteListener) this);
-		// nt.addPropertyChangeListener(this);
+		updateMinMax();
+		plot.borders = getBorders();
+		if (sets.size() > 0) {
+			plot.dataSets.clear();
+			plot.addAllDataSets(sets);
+			plotPanel.removeAll();
+			//nt = new CreatePlot(plot);
+			//nt.plot.createChart(nt);
+			//nt.doInBackground();
 
-//			calc = new STORMCalculator(this.allDataSets.get(currentRow), random);
-//			calc.execute();
-		progressBar.setToolTipText("Visualizing...");
-		nt.execute();
-
-//			plot.dataSets.clear();
-//			plot.addAllDataSets(sets);
-//			plotPanel.removeAll();
-//			plot.createChart();
-//			graphComponent = (Component) plot.createChart().getCanvas();
-//			plotPanel.add(graphComponent);
-//			plotPanel.revalidate();
-//			plotPanel.repaint();
-//			graphComponent.revalidate();
-//			Thread t = new Thread(){
-//			@Override
-//				public void run(){
-//					plot.run();
-//				}
-//			};
-		try {
-			Thread.sleep(100);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} else if (sets.size() == 0) {
+			System.out.println("empty!!!");
+			plot.dataSets.clear();
+			plotPanel.removeAll();
+			plotPanel.add(loadDataLabel);
+			plotPanel.revalidate();
+			plotPanel.repaint();
 		}
-//			t.start();
 
 	}
 	

@@ -36,6 +36,7 @@ import model.LineDataSet;
 import model.ParameterSet;
 import model.TriangleDataSet;
 
+
 public class Batchproc {
 	private static Random random;
 	static ArrayList<DataSet> allDataSets = new ArrayList<DataSet>();
