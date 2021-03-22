@@ -10,8 +10,15 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
+import java.io.FileWriter;
 
 import java.awt.Color;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 
 import calc.Calc;
@@ -99,6 +106,7 @@ public class BatchCalc extends Thread {
 			String name = fullpath + File.separator + "plain.tif";
 			FileManager.ExportToFile(thisDataSet, name, this.viewstatus, borders, 
 					this.parameters.getPixelsize(), this.parameters.getSigmaRendering(), this.shifts);
+			saveparameters(this.parameters, fullpath+File.separator+"plain_parameters.json");
 			
 			//to create tiffstack we need to do simulation again but with localization precision of 0nm
 			if(this.output_tiffstack){
@@ -129,6 +137,7 @@ public class BatchCalc extends Thread {
 						this.parameters.getElectronPerAdCount(), this.parameters.getFrameRate(), this.parameters.getMeanBlinkingTime(), this.parameters.getDeadTime(), this.parameters.getWindowsizePSF(),
 						modelNumber, this.parameters.getQuantumEfficiency(), this.parameters.getNa(), this.parameters.getPsfwidth(), this.parameters.getFokus(), this.parameters.getDefokus(), this.parameters.getSigmaBg(),
 						this.parameters.getConstOffset(), this.parameters.getCalibrationFile(), name, this.parameters.isEnsureSinglePSF(), this.parameters.isDistributePSFoverFrames(),new CreateTiffStack(null, null, null, null));
+				saveparameters(this.dataset.getParameterSet(), fullpath+File.separator+"tiff_parameters.json");
 			}
 		}
 		
@@ -142,8 +151,16 @@ public class BatchCalc extends Thread {
 		}
 	}
 	
-	public void saveparameters() {
+	public void saveparameters(ParameterSet param, String path) {
+		Gson gson = new GsonBuilder().setPrettyPrinting().create();//new Gson();
 		
+		try(FileOutputStream fos = new FileOutputStream(path);
+				OutputStreamWriter isr = new OutputStreamWriter(fos, StandardCharsets.UTF_8)) {
+			gson.toJson(param, isr);
+			
+		} catch(Exception e) {
+			
+		}
 	}
 
 }
