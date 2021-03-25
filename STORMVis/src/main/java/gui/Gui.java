@@ -96,7 +96,7 @@ import batchProcessing.BatchProcessor;
  * 
  */
 
-public class Gui extends JFrame implements TableModelListener, PropertyChangeListener, ThreadCompleteListener {
+public class Gui extends JFrame implements TableModelListener, PropertyChangeListener, ThreadCompleteListener, BatchUpdateListener {
 
 	private JPanel contentPane;
 	private JLabel epitopeDensityLabel;
@@ -2846,6 +2846,7 @@ public class Gui extends JFrame implements TableModelListener, PropertyChangeLis
         ArrayList<ParameterSet> params = conf.convertToParamterSet();
         
         //check if model files exist and import model
+        //it is important to load same models as Batchprocessor here! (we can not give a reference due to runtime access from calculation threads
         allDataSets.clear();
         for(int i=0;i<conf.models.size();i++){
         	File f = new File(conf.models.get(i));
@@ -2858,12 +2859,19 @@ public class Gui extends JFrame implements TableModelListener, PropertyChangeLis
         }
         
         //create BatchProcessor and do stuff ....
-        BatchProcessor proc = new BatchProcessor(allDataSets, conf, conf.num_threads, this);
-        long start = System.nanoTime();
-        proc.run();
-        long end = System.nanoTime();
-        System.out.println("----------------------------------");
-        System.out.println("Time taken (Batchprocesing): " + (end-start)/1e9 +"s");
+        BatchProcessor proc = new BatchProcessor(conf, conf.num_threads, this, 10.0f);
+        proc.addListener(this);
+        proc.execute();
+	}
+	
+	public List<DataSet> getDataSets() {
+		return allDataSets;
+	}
+	
+	@Override
+	public void notifyBatchUpdate(int index) {
+		System.out.println("Updating GUI!!!");
+		visualizeAllSelectedData();
 	}
 	
 	//visualize current drawing process

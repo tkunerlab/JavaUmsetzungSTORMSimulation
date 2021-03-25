@@ -94,12 +94,19 @@ public class Batchproc {
         }
         
         //create BatchProcessor and do stuff ....
-        BatchProcessor proc = new BatchProcessor(allDataSets, conf, conf.num_threads, null);
-        long start = System.nanoTime();
-        proc.run();
-        long end = System.nanoTime();
-        System.out.println("----------------------------------");
-        System.out.println("Time taken (Batchprocesing): " + (end-start)/1e9 +"s");
+        BatchProcessor proc = new BatchProcessor(conf, conf.num_threads, null, 10.0f);
+        proc.execute();
+        
+        while (!proc.isDone()) {
+			try {
+				Thread.sleep(100);
+				// System.out.println(calc.isCancelled()+" "+calc.isDone());
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+
 	}
 	
 	static private void load_model(File file){
