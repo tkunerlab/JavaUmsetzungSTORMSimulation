@@ -134,8 +134,27 @@ public class BatchProcessor extends SwingWorker<Void,Void>{
 		    			try {
 	    					Thread.sleep(100);
 	    				} catch (InterruptedException e) {
-	    					// TODO Auto-generated catch block
-	    					e.printStackTrace();
+	    					//We recieve an interrupt from main thread -> we can stop all threads
+	    					for(int m=0;m<runs.size();m++) {
+	    						runs.get(m).interrupt();
+	    					}
+	    					
+	    					//wait until all threads are closed
+	    					while(runs.size()>0) {
+	    						try {
+	    							Thread.sleep(100);
+	    						} catch(InterruptedException ex) {
+	    							ex.printStackTrace();
+	    						}
+		    					for(int m=runs.size();m>=0;m--) {
+		    						if(!runs.get(m).isAlive()) {
+		    							runs.remove(m); //remove interrupted Thread from List
+		    						}
+		    					}
+		    					
+	    					}
+	    					return;
+	    					//e.printStackTrace();
 	    				}
 		    			
 		    			//count number of active threads
@@ -173,6 +192,7 @@ public class BatchProcessor extends SwingWorker<Void,Void>{
 	    							dset2.fluorophorePos = Arrays.stream(dset.fluorophorePos).map(float[]::clone).toArray(float[][]::new);
 	    						}
 	    						//call to update GUI
+	    						dset2.setParameterSet(new ParameterSet(dset.getParameterSet()));
 	    						dset2.getParameterSet().setGeneralVisibility(true);
 	    						for(int a=0;a<this.reference_gui.getDataSets().size();a++) {
 	    							if(a==ind) {
@@ -207,8 +227,25 @@ public class BatchProcessor extends SwingWorker<Void,Void>{
 			try {
 				Thread.sleep(100);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				for(int m=0;m<runs.size();m++) {
+					runs.get(m).interrupt();
+				}
+				
+				//wait until all threads are closed
+				while(runs.size()>0) {
+					try {
+						Thread.sleep(100);
+					} catch(InterruptedException ex) {
+						ex.printStackTrace();
+					}
+					for(int m=runs.size();m>=0;m--) {
+						if(!runs.get(m).isAlive()) {
+							runs.remove(m); //remove interrupted Thread from List
+						}
+					}
+				}
+				return;
+				//e.printStackTrace();
 			}
 			
 			//count number of active threads

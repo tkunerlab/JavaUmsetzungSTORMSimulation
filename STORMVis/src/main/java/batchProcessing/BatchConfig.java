@@ -183,26 +183,6 @@ public class BatchConfig {
 						sub = sub.replaceAll(" ", "");
 						sub = sub.replaceAll("\t", "");
 						this.reproducible = (Integer.parseInt(sub)>0);
-					} else if(line.contains("Models")) { //TODO: currently models only support single line reading -> expand to multiple rows
-						pos = line.indexOf('[');
-						int pos2 = line.indexOf(']', pos+1);
-						if(pos2-pos-1>0) {
-							String sub = line.substring(pos+1, pos2);
-							String[] substrings = sub.split(";");
-							for(String string: substrings) {
-								pos = string.indexOf("\"");
-								pos2 = string.indexOf("\"", pos+1);
-								if(pos2-pos-1>0) {
-									this.models.add(string.substring(pos+1, pos2));
-								} else {
-									JOptionPane.showMessageDialog(null,"Modelname is empty or not given within \"\"!\n Aborting ...", "Malformatted Input", JOptionPane.ERROR_MESSAGE);
-									System.exit(-1);
-								}
-							}
-						} else {
-							JOptionPane.showMessageDialog(null,"Models are empty or not given within []!\n Aborting ...", "Malformatted Input", JOptionPane.ERROR_MESSAGE);
-							System.exit(-1);
-						}
 					} else if(line.contains("CalibrationFile")) {
 						pos = line.indexOf('\"');
 						int pos2 = line.indexOf('\"', pos+1);
@@ -252,6 +232,11 @@ public class BatchConfig {
 							}
 						}
 					}*/
+				} else if(section.equals("Models")) {
+					if(line.length()>0) {
+						this.models.add(line);
+					}
+				
 				} else {
 					JOptionPane.showMessageDialog(null,"Section does not exist!\n Aborting ...", "Malformatted Input", JOptionPane.ERROR_MESSAGE);
 					System.exit(-1);
@@ -411,7 +396,7 @@ public class BatchConfig {
 						p.setEmGain(c);
 						break;
 					case "QuantumEfficiency":
-						p.setQuantumEfficiency(c);
+						p.setQuantumEfficiency(new Float(c/100.0));
 						break;
 					case "WindowSizePSF":
 						p.setWindowsizePSF(c.intValue());
@@ -428,7 +413,7 @@ public class BatchConfig {
 					case "Defocus":
 						p.setDefokus(c);
 						break;
-					case "TiffStackMode":
+					case "TwoDPSF":
 						p.setTwoDPSF(c>0);
 						break;
 					case "ElectronPerAdCount":

@@ -82,6 +82,9 @@ public class BatchCalc extends Thread {
 		float sxy = this.parameters.getSxy();
 		float sz = this.parameters.getSz();
 		for(int r=0;r<this.repeats;r++) {
+			if(Thread.interrupted()) {
+				break;
+			}
 			String fullpath = this.basepath + File.separator;
 			fullpath = String.format("%srun%d", fullpath, r);
 			(new File(fullpath)).mkdirs(); //create new directory
@@ -108,6 +111,10 @@ public class BatchCalc extends Thread {
 					this.parameters.getPixelsize(), this.parameters.getSigmaRendering(), this.shifts);
 			saveparameters(this.parameters, fullpath+File.separator+"plain_parameters.json");
 			
+			if(Thread.interrupted()) {
+				break;
+			}
+			
 			//to create tiffstack we need to do simulation again but with localization precision of 0nm
 			if(this.output_tiffstack){
 				setUpRandomNumberGenerator(this.reproducible);
@@ -116,6 +123,10 @@ public class BatchCalc extends Thread {
 				this.dataset.setParameterSet(this.parameters);
 				calc = new STORMCalculator(this.dataset, this.random);
 				calc.doSimulation();
+				
+				if(Thread.interrupted()) {
+					break;
+				}
 				
 	    		thisDataSet = calc.getCurrentDataSet();
 	    		borders.clear();
@@ -159,7 +170,7 @@ public class BatchCalc extends Thread {
 			gson.toJson(param, isr);
 			
 		} catch(Exception e) {
-			
+			e.printStackTrace();
 		}
 	}
 

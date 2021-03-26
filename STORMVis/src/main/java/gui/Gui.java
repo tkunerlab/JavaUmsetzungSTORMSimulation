@@ -247,6 +247,10 @@ public class Gui extends JFrame implements TableModelListener, PropertyChangeLis
 	private JTextField deadTimeField;
 
 	private JCheckBox blueGreenOnlyChkBox;
+	
+	//Batchprocessing
+	boolean isbatchrunning = false;
+	BatchProcessor batchprocessor = null;
 
 	/**
 	 * Launch the application.
@@ -1998,16 +2002,36 @@ public class Gui extends JFrame implements TableModelListener, PropertyChangeLis
 		});
 		toolBar.add(btnEvaluate);
 		
+		//Batchprocessing
 		JButton btnBatch = new JButton("BatchProcessing");
 		btnBatch.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				chooser.setAcceptAllFileFilterUsed(false);
-				chooser.setFileSelectionMode(0);
-				int returnVal = chooser.showOpenDialog(getContentPane()); // replace null with your swing container
-				if (returnVal == JFileChooser.APPROVE_OPTION) {
-					//load batch-config file
-					startBatchProcessing(chooser.getSelectedFile().getPath());
+				
+				if(!isbatchrunning) {
+					chooser.setAcceptAllFileFilterUsed(false);
+					chooser.setFileSelectionMode(0);
+					int returnVal = chooser.showOpenDialog(getContentPane()); // replace null with your swing container
+					if (returnVal == JFileChooser.APPROVE_OPTION) {
+						//load batch-config file
+						isbatchrunning = true;
+						startBatchProcessing(chooser.getSelectedFile().getPath());
+					}
+				} else {
+					batchprocessor.cancel(true);
+					
+					//wait here
+					while(!batchprocessor.isCancelled()) {
+						try {
+							Thread.sleep(100);
+						} catch (InterruptedException ex) {
+							// TODO Auto-generated catch block
+							ex.printStackTrace();
+						}
+					}
+					
+					isbatchrunning = false;
+					JOptionPane.showMessageDialog(null, "Batchprocessing ended!");
 				}
 				
 			}
@@ -2859,9 +2883,9 @@ public class Gui extends JFrame implements TableModelListener, PropertyChangeLis
         }
         
         //create BatchProcessor and do stuff ....
-        BatchProcessor proc = new BatchProcessor(conf, conf.num_threads, this, 10.0f);
-        proc.addListener(this);
-        proc.execute();
+        batchprocessor = new BatchProcessor(conf, conf.num_threads, this, 10.0f);
+        batchprocessor.addListener(this);
+        batchprocessor.execute();
 	}
 	
 	public List<DataSet> getDataSets() {
@@ -2871,7 +2895,10 @@ public class Gui extends JFrame implements TableModelListener, PropertyChangeLis
 	@Override
 	public void notifyBatchUpdate(int index) {
 		System.out.println("Updating GUI!!!");
-		visualizeAllSelectedData();
+		currentRow = index;
+		copyFields();
+		//visualizeAllSelectedData();
+		//setSelectedListsForDrawing();
 	}
 	
 	//visualize current drawing process

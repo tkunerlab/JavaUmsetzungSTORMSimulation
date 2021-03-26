@@ -1,0 +1,71 @@
+#This is a comment
+#Main section
+[General]
+Name = "Testrun"                #Name under which the model is saved
+OutputPath = "../batch_out"     #Output folder, where all data is stored
+OutputTiffStack = 0             #Wether a tiffstack is calculated or not
+
+[Simulation]
+RepeatExperiment = 2        #how often the same parameter set is repeated
+Reproducible = 1            #Initialize the random number generator with a constant seed
+ViewStatus = 1
+CalibrationFile = "examples/calibration_file/210225_CalibFile.txt"
+NumThreads = 10
+
+#Put all models in this section
+[Models]
+examples/models/Microtubules.wimp
+examples/models/Mitochondria.nff
+               
+
+#Place all parameters after here
+[Parameters]
+LabelingEfficiency = 10.0            #[%]
+MeanAngleField = 90               #[°]
+AngularDistribution = 0.0           #[°]
+DetectionEfficiency = 100.0         #[%]
+BackgroundLabel = 0.0               #[1/ym^3]
+LabelLength = 15.0                  #[nm]
+FluorophoresPerLabel = 1.0
+DutyCycle = 0.0005
+BleachConstant = 2.231e-5
+RecordedFrames = 10000 
+locPrecisionXY = 4.0                #[nm]
+locPrecisionZ = 8.0                 #[nm]
+PsfWidth = 647.0                    #[nm]
+AveragePhotonNumber = 4000
+EpitopeDensityL = 1.625             #for lines only [1/nm^2]
+EpitopeDensity = 0.0167             #[1/nm^2]
+RadiusOfFilaments = 12.5            #[nm]
+PointSize = 4.0
+LineWidth = 2.0
+ApplyBleaching = 0
+CoupleSigmaIntensity = 1
+PixelToNmRatio = 133.0 
+FrameRate = 30.0                    #[Hz]
+DeadTime = 0.0                      #[s]
+SigmaBg = 22.0
+ConstantOffset = 200.0
+EmGain = 10.0
+QuantumEfficiency = 1.0             #[%]
+WindowSizePSF = 10                  #[pix]
+EmptyPixelsOnRim = 5                #[pix]
+Na = 1.45
+Focus = 400.0                       #[nm]
+Defocus = 800.0                     #[nm]
+TwoDPSF = 1                   #1=2D, 0=3D
+ElectronPerAdCount = 4.81
+MeanBlinkingTime = 0.05             #[s]
+DistributePSFOverFrames = 1
+EnsureSinglePSF = 0
+MinIntensity = 1000
+PixelSize = 10                      #[nm]
+SigmaRendering = 10
+BlueGreenOnly = 0
+
+#Multiple values for parameter:
+#param = [val1; val2; val3]
+#Range of values for parameter:
+#param = [startval...endval/(stepsize)]
+#combination of both
+#param = [val1; val2; startval...endval/(stepsize); val3]
