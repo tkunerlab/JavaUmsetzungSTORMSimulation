@@ -56,9 +56,9 @@ public class BatchProcessor extends SwingWorker<Void,Void>{
 		listeners.remove(toRemove);
 	}
 	
-	public void notifyListener(int index) {
+	public void notifyListener(int index, ParameterSet paramset, float[][] stormdata, float[][] antibodystart, float[][] antibodyend, float[][] fluorophores) {
 		for (BatchUpdateListener l : this.listeners)
-            l.notifyBatchUpdate(index);
+            l.notifyBatchUpdate(index, paramset, stormdata, antibodystart, antibodyend, fluorophores);
 	}
 	
 	public Void doInBackground() {
@@ -144,6 +144,7 @@ public class BatchProcessor extends SwingWorker<Void,Void>{
 	    						try {
 	    							Thread.sleep(100);
 	    						} catch(InterruptedException ex) {
+	    							System.out.println("Bla");
 	    							ex.printStackTrace();
 	    						}
 		    					for(int m=runs.size();m>=0;m--) {
@@ -175,36 +176,18 @@ public class BatchProcessor extends SwingWorker<Void,Void>{
 	    				if(diff>= this.gui_update_seconds) {
 	    					//take one of the finished threads and use the data to update the GUI
 	    					if(completed.size()>0) {
+	    						
 	    						DataSet dset = runs.get(completed.get(0).intValue()).getCurrentDataSet();
-	    						int ind = modelindices.get(completed.get(0).intValue());
-	    						DataSet dset2 = this.reference_gui.getDataSets().get(ind);
-	    						//copy datasetpoints
-	    						if(dset.stormData != null) {
-	    							dset2.stormData = Arrays.stream(dset.stormData).map(float[]::clone).toArray(float[][]::new); //some Java 8 magic
-	    						} 
-	    						if(dset.antiBodyStartPoints != null) {
-	    							dset2.antiBodyStartPoints = Arrays.stream(dset.antiBodyStartPoints).map(float[]::clone).toArray(float[][]::new);
-	    						} 
-	    						if(dset.antiBodyEndPoints != null) {
-	    							dset2.antiBodyEndPoints = Arrays.stream(dset.antiBodyEndPoints).map(float[]::clone).toArray(float[][]::new);
-	    						} 
-	    						if(dset.fluorophorePos != null) {
-	    							dset2.fluorophorePos = Arrays.stream(dset.fluorophorePos).map(float[]::clone).toArray(float[][]::new);
-	    						}
-	    						//call to update GUI
-	    						dset2.setParameterSet(new ParameterSet(dset.getParameterSet()));
-	    						dset2.getParameterSet().setGeneralVisibility(true);
-	    						for(int a=0;a<this.reference_gui.getDataSets().size();a++) {
-	    							if(a==ind) {
-	    								continue;
-	    							}
-	    							this.reference_gui.getDataSets().get(a).getParameterSet().setGeneralVisibility(false);
-	    						}
-	    						///System.out.println("Update GUI!!!");
-	    						notifyListener(ind);
-	    						//this.reference_gui.setSelectedListsForDrawing();
-	    						//invoke update in GUI
-	    						//this.reference_gui.batchproc_draw();
+	    						//sample random dataset from completed
+	    						Random ran = new Random();
+	    						int x = ran.nextInt(completed.size());
+	    						int ind = modelindices.get(completed.get(x).intValue());
+	    						
+	    						float[][] stormdata = Arrays.stream(dset.stormData).map(float[]::clone).toArray(float[][]::new);
+	    						float[][] antistart = Arrays.stream(dset.antiBodyStartPoints).map(float[]::clone).toArray(float[][]::new);
+	    						float[][] antiend = Arrays.stream(dset.antiBodyEndPoints).map(float[]::clone).toArray(float[][]::new);
+	    						float[][] fluorophores = Arrays.stream(dset.fluorophorePos).map(float[]::clone).toArray(float[][]::new);
+	    						notifyListener(ind, new ParameterSet(dset.getParameterSet()), stormdata, antistart, antiend, fluorophores); //not the best way to copy stuff but it works
 	    						
 	    						lastupdate = System.nanoTime();
 	    					}

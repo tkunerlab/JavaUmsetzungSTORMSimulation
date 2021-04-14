@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
+import java.util.Arrays;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -2888,50 +2889,77 @@ public class Gui extends JFrame implements TableModelListener, PropertyChangeLis
         batchprocessor.execute();
 	}
 	
-	public List<DataSet> getDataSets() {
-		return allDataSets;
-	}
 	
 	@Override
-	public void notifyBatchUpdate(int index) {
+	public void notifyBatchUpdate(int index, ParameterSet paramset, float[][] stormdata, float[][] antibodystart, float[][] antibodyend, float[][] fluorophores) {
 		System.out.println("Updating GUI!!!");
+		//copy stuff
+		
+		DataSet dset = allDataSets.get(index);
+		dset.setParameterSet(new ParameterSet(paramset));
+		
+		if(stormdata != null) {
+			dset.stormData = Arrays.stream(stormdata).map(float[]::clone).toArray(float[][]::new); //some Java 8 magic
+		} 
+		if(antibodystart != null) {
+			dset.antiBodyStartPoints = Arrays.stream(antibodystart).map(float[]::clone).toArray(float[][]::new);
+		} 
+		if(antibodyend != null) {
+			dset.antiBodyEndPoints = Arrays.stream(antibodyend).map(float[]::clone).toArray(float[][]::new);
+		} 
+		if(fluorophores != null) {
+			dset.fluorophorePos = Arrays.stream(fluorophores).map(float[]::clone).toArray(float[][]::new);
+		}
+		
 		currentRow = index;
-		copyFields();
-		//visualizeAllSelectedData();
-		//setSelectedListsForDrawing();
+		batchdraw();
 	}
 	
-	//visualize current drawing process
-	public void batchproc_draw() {
+	public void batchdraw() {
 		List<DataSet> sets = new ArrayList<DataSet>();
-		model.visibleSets.clear();
-		for (int i = 0; i < allDataSets.size(); i++) {
-			allDataSets.get(currentRow).setProgressBar(progressBar);
-			if (allDataSets.get(i).getParameterSet().getGeneralVisibility() == true) {
-				model.visibleSets.add(Boolean.TRUE);
-				sets.add(model.data.get(i));
-			} else {
-				model.visibleSets.add(Boolean.FALSE);
-			}
-		}
-		model.data.clear();
-		model.data.addAll(allDataSets);
-		plot.squared = false;
-		plot.showBox = chckbxShowAxes.isSelected();
-		plot.showTicks = chckbxShowTicks.isSelected();
-		plot.backgroundColor = new org.jzy3d.colors.Color(backgroundColor.getRed(), backgroundColor.getGreen(),
-				backgroundColor.getBlue());
-		plot.mainColor = new org.jzy3d.colors.Color(mainColor.getRed(), mainColor.getGreen(), mainColor.getBlue());
+		sets.add(allDataSets.get(currentRow));
 		updateMinMax();
-		plot.borders = getBorders();
 		if (sets.size() > 0) {
+			plot.showBox = chckbxShowAxes.isSelected();
+			plot.showTicks = chckbxShowTicks.isSelected();
+			plot.backgroundColor = new org.jzy3d.colors.Color(backgroundColor.getRed(), backgroundColor.getGreen(),
+					backgroundColor.getBlue());
+			plot.mainColor = new org.jzy3d.colors.Color(mainColor.getRed(), mainColor.getGreen(), mainColor.getBlue());
 			plot.dataSets.clear();
 			plot.addAllDataSets(sets);
 			plotPanel.removeAll();
-			//nt = new CreatePlot(plot);
-			//nt.plot.createChart(nt);
-			//nt.doInBackground();
+			nt = new CreatePlot(plot);
+			nt.addPropertyChangeListener(this);
+			nt.addListener((ThreadCompleteListener) this);
+			// nt.addPropertyChangeListener(this);
 
+//			calc = new STORMCalculator(this.allDataSets.get(currentRow), random);
+//			calc.execute();
+			progressBar.setToolTipText("Visualizing...");
+			nt.execute();
+
+//			plot.dataSets.clear();
+//			plot.addAllDataSets(sets);
+//			plotPanel.removeAll();
+//			plot.createChart();
+//			graphComponent = (Component) plot.createChart().getCanvas();
+//			plotPanel.add(graphComponent);
+//			plotPanel.revalidate();
+//			plotPanel.repaint();
+//			graphComponent.revalidate();
+//			Thread t = new Thread(){
+//			@Override
+//				public void run(){
+//					plot.run();
+//				}
+//			};
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+//			t.start();
 		} else if (sets.size() == 0) {
 			System.out.println("empty!!!");
 			plot.dataSets.clear();
@@ -2940,15 +2968,6 @@ public class Gui extends JFrame implements TableModelListener, PropertyChangeLis
 			plotPanel.revalidate();
 			plotPanel.repaint();
 		}
-
-	}
-	
-	public void batchproc_draw_empty() {
-		plot.dataSets.clear();
-		plotPanel.removeAll();
-		plotPanel.add(loadDataLabel);
-		plotPanel.revalidate();
-		plotPanel.repaint();
 	}
 
 }
