@@ -252,6 +252,7 @@ public class Gui extends JFrame implements TableModelListener, PropertyChangeLis
 	//Batchprocessing
 	boolean isbatchrunning = false;
 	BatchProcessor batchprocessor = null;
+	private static List<DataSet> batchDataSets = new ArrayList<DataSet>();
 
 	/**
 	 * Launch the application.
@@ -2872,7 +2873,7 @@ public class Gui extends JFrame implements TableModelListener, PropertyChangeLis
         
         //check if model files exist and import model
         //it is important to load same models as Batchprocessor here! (we can not give a reference due to runtime access from calculation threads
-        allDataSets.clear();
+        batchDataSets.clear();
         for(int i=0;i<conf.models.size();i++){
         	File f = new File(conf.models.get(i));
         	if(!f.exists() || f.isDirectory()) { 
@@ -2880,7 +2881,7 @@ public class Gui extends JFrame implements TableModelListener, PropertyChangeLis
 				System.exit(-1);
         	}
         	//load_model(f);
-        	proceedFileImport(f);
+        	batchproceedFileImport(f);
         }
         
         //create BatchProcessor and do stuff ....
@@ -2895,7 +2896,7 @@ public class Gui extends JFrame implements TableModelListener, PropertyChangeLis
 		System.out.println("Updating GUI!!!");
 		//copy stuff
 		
-		DataSet dset = allDataSets.get(index);
+		DataSet dset = batchDataSets.get(index);
 		dset.setParameterSet(new ParameterSet(paramset));
 		
 		if(stormdata != null) {
@@ -2911,48 +2912,63 @@ public class Gui extends JFrame implements TableModelListener, PropertyChangeLis
 			dset.fluorophorePos = Arrays.stream(fluorophores).map(float[]::clone).toArray(float[][]::new);
 		}
 		
-		currentRow = index;
-		batchdraw();
+		//currentRow = index;
+		batchdraw(dset);
 	}
 	
-	public void batchdraw() {
-		List<DataSet> sets = new ArrayList<DataSet>();
-		sets.add(allDataSets.get(currentRow));
-		updateMinMax();
-		if (sets.size() > 0) {
+	public void batchdraw(DataSet dset) {
+		//UpdateMinMax()
+		if (dset != null) {
+			ArrayList<Float> maxDims = new ArrayList<Float>();
+			maxDims.add(0.0f);
+			maxDims.add(0.0f);
+			maxDims.add(0.0f);
+			maxDims.add(0.0f);
+			maxDims.add(0.0f);
+			maxDims.add(0.0f);
+			ArrayList<Float> dims = new ArrayList<Float>();
+			
+			if (dset.antiBodyEndPoints != null) {
+				dims = Calc.findDims(dset.antiBodyEndPoints);
+				maxDims = findBorders(maxDims, dims);
+				dims = Calc.findDims(dset.antiBodyStartPoints);
+				maxDims = findBorders(maxDims, dims);
+			}
+			if (dset.stormData != null) {
+				dims = Calc.findDims(dset.stormData);
+				maxDims = findBorders(maxDims, dims);
+			}
+
+			if (dset.dataType.equals(DataType.TRIANGLES)) {
+				TriangleDataSet triangles = (TriangleDataSet) dset;
+				dims = Calc.findDimsTriangles(triangles.getPrimitives());
+				maxDims = findBorders(maxDims, dims);
+			} else if (dset.dataType.equals(DataType.LINES)) {
+				LineDataSet lines = (LineDataSet) dset;
+				dims = Calc.findDimsLines(lines.data);
+				maxDims = findBorders(maxDims, dims);
+			}
+			
+			plot.borders = maxDims; 
+			
 			plot.showBox = chckbxShowAxes.isSelected();
 			plot.showTicks = chckbxShowTicks.isSelected();
 			plot.backgroundColor = new org.jzy3d.colors.Color(backgroundColor.getRed(), backgroundColor.getGreen(),
 					backgroundColor.getBlue());
 			plot.mainColor = new org.jzy3d.colors.Color(mainColor.getRed(), mainColor.getGreen(), mainColor.getBlue());
 			plot.dataSets.clear();
+			List<DataSet> sets = new ArrayList<DataSet>();
+			sets.add(dset);
 			plot.addAllDataSets(sets);
-			plotPanel.removeAll();
+			plotPanel.removeAll(); //donno why this somtimes throws a timeout exception
 			nt = new CreatePlot(plot);
 			nt.addPropertyChangeListener(this);
 			nt.addListener((ThreadCompleteListener) this);
-			// nt.addPropertyChangeListener(this);
 
-//			calc = new STORMCalculator(this.allDataSets.get(currentRow), random);
-//			calc.execute();
+
 			progressBar.setToolTipText("Visualizing...");
 			nt.execute();
 
-//			plot.dataSets.clear();
-//			plot.addAllDataSets(sets);
-//			plotPanel.removeAll();
-//			plot.createChart();
-//			graphComponent = (Component) plot.createChart().getCanvas();
-//			plotPanel.add(graphComponent);
-//			plotPanel.revalidate();
-//			plotPanel.repaint();
-//			graphComponent.revalidate();
-//			Thread t = new Thread(){
-//			@Override
-//				public void run(){
-//					plot.run();
-//				}
-//			};
 			try {
 				Thread.sleep(100);
 			} catch (InterruptedException e) {
@@ -2960,7 +2976,7 @@ public class Gui extends JFrame implements TableModelListener, PropertyChangeLis
 				e.printStackTrace();
 			}
 //			t.start();
-		} else if (sets.size() == 0) {
+		} else {
 			System.out.println("empty!!!");
 			plot.dataSets.clear();
 			plotPanel.removeAll();
@@ -2968,6 +2984,34 @@ public class Gui extends JFrame implements TableModelListener, PropertyChangeLis
 			plotPanel.revalidate();
 			plotPanel.repaint();
 		}
+	}
+	
+	private void batchproceedFileImport(File file) {
+		System.out.println("Path: " + file.getAbsolutePath());
+		DataType type = DataType.UNKNOWN;
+		try {
+			type = DataTypeDetector.getDataType(file.getAbsolutePath());
+			System.out.println(type.toString());
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		DataSet data = ParserWrapper.parseFileOfType(file.getAbsolutePath(), type);
+		data.setName(file.getName());
+		data.setProgressBar(new JProgressBar());
+		batchfurtherProceedFileImport(data, type);
+	}
+
+	private void batchfurtherProceedFileImport(DataSet data, DataType type) {
+		if (data.dataType.equals(DataType.TRIANGLES)) {
+			System.out.println("Triangles parsed correctly.");
+		} else if (type.equals(DataType.LINES)) {
+			System.out.println("Lines parsed correctly.");
+		} else if (type.equals(DataType.PLY)) {
+			System.out.println("PLY file parsed.");
+		}
+
+		batchDataSets.add(data);
 	}
 
 }

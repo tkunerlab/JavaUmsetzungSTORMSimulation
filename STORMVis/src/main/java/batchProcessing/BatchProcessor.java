@@ -144,7 +144,6 @@ public class BatchProcessor extends SwingWorker<Void,Void>{
 	    						try {
 	    							Thread.sleep(100);
 	    						} catch(InterruptedException ex) {
-	    							System.out.println("Bla");
 	    							ex.printStackTrace();
 	    						}
 		    					for(int m=runs.size();m>=0;m--) {
@@ -188,7 +187,30 @@ public class BatchProcessor extends SwingWorker<Void,Void>{
 	    						float[][] antiend = Arrays.stream(dset.antiBodyEndPoints).map(float[]::clone).toArray(float[][]::new);
 	    						float[][] fluorophores = Arrays.stream(dset.fluorophorePos).map(float[]::clone).toArray(float[][]::new);
 	    						notifyListener(ind, new ParameterSet(dset.getParameterSet()), stormdata, antistart, antiend, fluorophores); //not the best way to copy stuff but it works
-	    						
+	    						try {
+	    							Thread.sleep(100);
+	    						} catch(InterruptedException ex) {
+	    							//We recieve an interrupt from main thread -> we can stop all threads
+	    	    					for(int m=0;m<runs.size();m++) {
+	    	    						runs.get(m).interrupt();
+	    	    					}
+	    	    					
+	    	    					//wait until all threads are closed
+	    	    					while(runs.size()>0) {
+	    	    						try {
+	    	    							Thread.sleep(100);
+	    	    						} catch(InterruptedException ex2) {
+	    	    							ex2.printStackTrace();
+	    	    						}
+	    		    					for(int m=runs.size();m>=0;m--) {
+	    		    						if(!runs.get(m).isAlive()) {
+	    		    							runs.remove(m); //remove interrupted Thread from List
+	    		    						}
+	    		    					}
+	    		    					
+	    	    					}
+	    	    					return;
+	    						}
 	    						lastupdate = System.nanoTime();
 	    					}
 	    				}
