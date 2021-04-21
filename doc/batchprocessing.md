@@ -1,23 +1,49 @@
-#This is a comment
-#Main section
-[General]
-Name = "Testrun"                #Name under which the model is saved
-OutputPath = "../batch_out"     #Output folder, where all data is stored
-OutputTiffStack = 0             #Wether a tiffstack is calculated or not
+# Batch-Processing
 
+## Configuration
+Before running you calculations a configuration file needs to be created.
+First of all a header is needed with the following structure:
+
+```
+[General]
+Name = "Experiment" 
+OutputPath = "../batch_out"
+OutputTiffStack = 0
+```
+
+- Name: Global name under which the batch-processing runs. A folder is created if none exists
+- OutputPath: Path where the output is stored
+- OutputTiffStack: 1=Create Tiff files, 0=Do not create Tiff files (faster)
+
+Next the general simulation settings need to be defined:
+
+```
 [Simulation]
-RepeatExperiment = 2        #how often the same parameter set is repeated
-Reproducible = 1            #Initialize the random number generator with a constant seed
+RepeatExperiment = 2      
+Reproducible = 1  
 ViewStatus = 1
 CalibrationFile = "examples/calibration_file/210225_CalibFile.txt"
-NumThreads = 10             #Number of threads used for parallel calculation
+NumThreads = 1   
+```
 
+- RepeatExperiment: How often the same parameter combination is repeated to collect statistics. Only makes sense if Reproducible=0
+- Reproducible: 1=Choose the same random seed for every run, 0=random seed changes for every run
+- ViewStatus: Just leave this at 1
+- CalibrationFile: Path to the calibration file to create 3D tiffstacks
+- NumThreads: Number of threads to use for parallel calculation
+
+The batch-processing supports loading multiple models as shown below
+
+```
 #Put all models in this section
 [Models]
 examples/models/Microtubules.wimp
-examples/models/Mitochondria.nff
-               
+examples/models/Mitochondria.nff 
+```
 
+Lastly values/value ranges need to be defined for parameters of interest
+
+```
 #Place all parameters after here
 [Parameters]
 LabelingEfficiency = 10.0            #[%]
@@ -62,10 +88,15 @@ MinIntensity = 1000
 PixelSize = 10                      #[nm]
 SigmaRendering = 10
 BlueGreenOnly = 0
+```
 
+For each parameter which is not boolean (1/0) a range of values can be applied with the following syntax:
+
+```
 #Multiple values for parameter:
 #param = [val1; val2; val3]
 #Range of values for parameter:
 #param = [startval...endval/(stepsize)]
 #combination of both
 #param = [val1; val2; startval...endval/(stepsize); val3]
+```

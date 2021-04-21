@@ -122,6 +122,25 @@
               <goal>single</goal>
             </goals>
             <configuration>
+              <finalName>suresim_cli.jar</finalName>
+              <archive>
+                <manifest>
+                  <mainClass>cli.CLI</mainClass>
+                </manifest>
+              </archive>
+              <descriptorRefs>
+                <descriptorRef>jar-with-dependencies</descriptorRef>
+              </descriptorRefs>
+            </configuration>
+          </execution>
+          
+          <execution>
+            <id>batch-processing</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <configuration>
               <finalName>suresim_batchprocessing.jar</finalName>
               <archive>
                 <manifest>

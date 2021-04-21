@@ -2,6 +2,7 @@
 
 
 * [Command Line Interface (CLI)](doc/cli.md)
+* [Batch-Processing](doc/batchprocessing.md)
 
 
 
