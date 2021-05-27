@@ -59,7 +59,6 @@ public class BatchCalc extends Thread {
 		for(int i=0;i<borders.length;i++) {
 			this.borders.add(borders[i]);
 		}
-		
 	}
 	
 	
@@ -123,6 +122,8 @@ public class BatchCalc extends Thread {
 				bds.add(Calc.max(thisDataSet.stormData, 2));
 			} else {
 				bds = new ArrayList<Float>(this.borders);
+				bds.set(4, Calc.min(thisDataSet.stormData, 2)); //we need to be careful, only works for 2D data
+				bds.set(5, Calc.max(thisDataSet.stormData, 2));
 			}
 			
 			//save output
