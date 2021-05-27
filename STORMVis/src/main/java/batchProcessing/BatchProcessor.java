@@ -119,8 +119,13 @@ public class BatchProcessor extends SwingWorker<Void,Void>{
 	    		ParameterSet ptemp = new ParameterSet(params.get(i)); //deep copy parameter set
 	    		DataSet pdata = dataset_deepcopy(this.allDataSets.get(j)); //deep copy dataset
 	    		
+	    		float[] bds = new float[this.config.borders.size()];
+	    		for(int k=0;k<this.config.borders.size();k++) {
+	    			bds[k] = this.config.borders.get(k).floatValue();
+	    		}
+	    		
 	    		runs.add(new BatchCalc(fullpath, pdata, ptemp, this.config.output_tiffstack, this.config.reproducible, this.config.viewstatus,
-	    				this.config.shifts, this.config.repeat_experiment));
+	    				this.config.shifts, bds, this.config.repeat_experiment));
 	    		modelindices.add(j);
 	    		runs.get(runs.size()-1).start();
 	    		

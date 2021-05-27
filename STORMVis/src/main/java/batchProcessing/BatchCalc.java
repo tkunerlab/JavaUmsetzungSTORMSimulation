@@ -39,13 +39,14 @@ public class BatchCalc extends Thread {
     Random random;
     int viewstatus = 1;
     float[] shifts = {0 , 0, 0};
+    ArrayList<Float> borders = new ArrayList<Float>();
     String basepath = "";
     boolean output_tiffstack = false;
     boolean reproducible = true;
     int repeats = 1;
     public int id = -1;
 	   
-	public BatchCalc(String basepath, DataSet dataset, ParameterSet parameters, boolean tiff_out, boolean reproducible, int viewstatus, float[] shifts, int repeats) {
+	public BatchCalc(String basepath, DataSet dataset, ParameterSet parameters, boolean tiff_out, boolean reproducible, int viewstatus, float[] shifts, float[] borders, int repeats) {
 		this.basepath = basepath;
 		this.dataset = dataset;
 		this.parameters = parameters;
@@ -54,6 +55,11 @@ public class BatchCalc extends Thread {
 		this.output_tiffstack = tiff_out;
 		this.reproducible = reproducible;
 		this.repeats = repeats;
+		
+		for(int i=0;i<borders.length;i++) {
+			this.borders.add(borders[i]);
+		}
+		
 	}
 	
 	
@@ -107,17 +113,21 @@ public class BatchCalc extends Thread {
 			
 			//save outcome
 			DataSet thisDataSet = calc.getCurrentDataSet();
-			ArrayList<Float> borders = new ArrayList<Float>();
-			borders.add(Calc.min(thisDataSet.stormData, 0));
-			borders.add(Calc.max(thisDataSet.stormData, 0));
-			borders.add(Calc.min(thisDataSet.stormData, 1));
-			borders.add(Calc.max(thisDataSet.stormData, 1));
-			borders.add(Calc.min(thisDataSet.stormData, 2));
-			borders.add(Calc.max(thisDataSet.stormData, 2));
+			ArrayList<Float> bds = new ArrayList<Float>();
+			if(this.borders.size()==0) {
+				bds.add(Calc.min(thisDataSet.stormData, 0));
+				bds.add(Calc.max(thisDataSet.stormData, 0));
+				bds.add(Calc.min(thisDataSet.stormData, 1));
+				bds.add(Calc.max(thisDataSet.stormData, 1));
+				bds.add(Calc.min(thisDataSet.stormData, 2));
+				bds.add(Calc.max(thisDataSet.stormData, 2));
+			} else {
+				bds = new ArrayList<Float>(this.borders);
+			}
 			
 			//save output
 			String name = fullpath + File.separator + "plain.tif";
-			FileManager.ExportToFile(thisDataSet, name, this.viewstatus, borders, 
+			FileManager.ExportToFile(thisDataSet, name, this.viewstatus, bds, 
 					this.parameters.getPixelsize(), this.parameters.getSigmaRendering(), this.shifts);
 			saveparameters(this.parameters, fullpath+File.separator+"plain_parameters.json");
 			
@@ -139,13 +149,15 @@ public class BatchCalc extends Thread {
 				}
 				
 	    		thisDataSet = calc.getCurrentDataSet();
-	    		borders.clear();
-	    		borders.add(Calc.min(thisDataSet.stormData, 0));
-	    		borders.add(Calc.max(thisDataSet.stormData, 0));
-	    		borders.add(Calc.min(thisDataSet.stormData, 1));
-	    		borders.add(Calc.max(thisDataSet.stormData, 1));
-	    		borders.add(Calc.min(thisDataSet.stormData, 2));
-	    		borders.add(Calc.max(thisDataSet.stormData, 2));
+	    		if(this.borders.size()==0) {
+		    		bds.clear();
+		    		bds.add(Calc.min(thisDataSet.stormData, 0));
+		    		bds.add(Calc.max(thisDataSet.stormData, 0));
+		    		bds.add(Calc.min(thisDataSet.stormData, 1));
+		    		bds.add(Calc.max(thisDataSet.stormData, 1));
+		    		bds.add(Calc.min(thisDataSet.stormData, 2));
+		    		bds.add(Calc.max(thisDataSet.stormData, 2));
+	    		}
 	    		
 				int modelNumber = 2;
 				if (this.parameters.isTwoDPSF()){
@@ -154,7 +166,7 @@ public class BatchCalc extends Thread {
 				
 				name = fullpath + File.separator + "tiffstack.tif";
 				CreateStack.createTiffStack(thisDataSet.stormData, 1/this.parameters.getPixelToNmRatio(),
-						this.parameters.getEmptyPixelsOnRim(), this.parameters.getEmGain(), borders, this.random,
+						this.parameters.getEmptyPixelsOnRim(), this.parameters.getEmGain(), bds, this.random,
 						this.parameters.getElectronPerAdCount(), this.parameters.getFrameRate(), this.parameters.getMeanBlinkingTime(), this.parameters.getDeadTime(), this.parameters.getWindowsizePSF(),
 						modelNumber, this.parameters.getQuantumEfficiency(), this.parameters.getNa(), this.parameters.getPsfwidth(), this.parameters.getFokus(), this.parameters.getDefokus(), this.parameters.getSigmaBg(),
 						this.parameters.getConstOffset(), this.parameters.getCalibrationFile(), name, this.parameters.isEnsureSinglePSF(), this.parameters.isDistributePSFoverFrames(),new CreateTiffStack(null, null, null, null));
