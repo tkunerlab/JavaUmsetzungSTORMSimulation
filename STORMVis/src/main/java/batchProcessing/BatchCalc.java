@@ -43,6 +43,7 @@ public class BatchCalc extends Thread {
     boolean output_tiffstack = false;
     boolean reproducible = true;
     int repeats = 1;
+    public int id = -1;
 	   
 	public BatchCalc(String basepath, DataSet dataset, ParameterSet parameters, boolean tiff_out, boolean reproducible, int viewstatus, float[] shifts, int repeats) {
 		this.basepath = basepath;
@@ -79,6 +80,11 @@ public class BatchCalc extends Thread {
 	}
 	
 	public void doSimulation() {
+		
+		if(this.id>-1) {
+			this.repeats = 1;
+		}
+		
 		float sxy = this.parameters.getSxy();
 		float sz = this.parameters.getSz();
 		for(int r=0;r<this.repeats;r++) {
@@ -86,7 +92,11 @@ public class BatchCalc extends Thread {
 				break;
 			}
 			String fullpath = this.basepath + File.separator;
-			fullpath = String.format("%srun%d", fullpath, r);
+			if(id==-1) {
+				fullpath = String.format("%srun%d", fullpath, r);
+			} else {
+				fullpath = String.format("%sobj_%05d", fullpath, this.id);
+			}
 			(new File(fullpath)).mkdirs(); //create new directory
 			setUpRandomNumberGenerator(this.reproducible);
 			this.dataset.getParameterSet().setSxy(sxy); //BE CAREFUL we alter the origin
