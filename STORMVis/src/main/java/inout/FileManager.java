@@ -161,6 +161,8 @@ public class FileManager {
 			case 1://xy
 				pixelX = (int) Math.pow(2, Math.ceil(Math.log((xmax+shifts[0]) / pixelsize+2*filterwidth)/Math.log(2)));
 				pixelY = (int) Math.pow(2, Math.ceil(Math.log((ymax+shifts[1]) / pixelsize+2*filterwidth)/Math.log(2)));
+				System.out.println(pixelX);
+				System.out.println(pixelY);
 				break;
 			case 2://xz
 				pixelX = (int) Math.pow(2, Math.ceil(Math.log((xmax+shifts[0]) / pixelsize+2*filterwidth)/Math.log(2)));

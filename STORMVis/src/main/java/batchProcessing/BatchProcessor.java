@@ -125,7 +125,7 @@ public class BatchProcessor extends SwingWorker<Void,Void>{
 	    		}
 	    		
 	    		runs.add(new BatchCalc(fullpath, pdata, ptemp, this.config.output_tiffstack, this.config.reproducible, this.config.viewstatus,
-	    				this.config.shifts, bds, this.config.repeat_experiment));
+	    				this.config.shifts, bds, this.config.repeat_experiment, -1, 256, 256));
 	    		modelindices.add(j);
 	    		runs.get(runs.size()-1).start();
 	    		

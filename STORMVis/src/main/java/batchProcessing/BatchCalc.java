@@ -27,6 +27,10 @@ import calc.STORMCalculator;
 import gui.CreateTiffStack;
 import gui.DataTypeDetector;
 import gui.DataTypeDetector.DataType;
+import ij.ImagePlus;
+import ij.plugin.RGBStackMerge;
+import ij.process.FloatProcessor;
+import ij.process.ImageProcessor;
 import inout.FileManager;
 import model.DataSet;
 import model.ParameterSet;
@@ -45,8 +49,10 @@ public class BatchCalc extends Thread {
     boolean reproducible = true;
     int repeats = 1;
     public int id = -1;
+    int sizex = 128;
+    int sizey = 128;
 	   
-	public BatchCalc(String basepath, DataSet dataset, ParameterSet parameters, boolean tiff_out, boolean reproducible, int viewstatus, float[] shifts, float[] borders, int repeats) {
+	public BatchCalc(String basepath, DataSet dataset, ParameterSet parameters, boolean tiff_out, boolean reproducible, int viewstatus, float[] shifts, float[] borders, int repeats, int id, int sizey, int sizex) {
 		this.basepath = basepath;
 		this.dataset = dataset;
 		this.parameters = parameters;
@@ -55,10 +61,14 @@ public class BatchCalc extends Thread {
 		this.output_tiffstack = tiff_out;
 		this.reproducible = reproducible;
 		this.repeats = repeats;
+		this.id = id;
 		
 		for(int i=0;i<borders.length;i++) {
 			this.borders.add(borders[i]);
 		}
+		
+		this.sizex = sizex;
+		this.sizey = sizey;
 	}
 	
 	
@@ -97,6 +107,7 @@ public class BatchCalc extends Thread {
 				break;
 			}
 			String fullpath = this.basepath + File.separator;
+			
 			if(id==-1) {
 				fullpath = String.format("%srun%d", fullpath, r);
 			} else {
@@ -130,6 +141,7 @@ public class BatchCalc extends Thread {
 			String name = fullpath + File.separator + "plain.tif";
 			FileManager.ExportToFile(thisDataSet, name, this.viewstatus, bds, 
 					this.parameters.getPixelsize(), this.parameters.getSigmaRendering(), this.shifts);
+			render_image(thisDataSet, fullpath + File.separator + "plain", this.viewstatus, bds, this.parameters.getPixelsize(), this.parameters.getSigmaRendering(), this.shifts, this.sizex, this.sizey);
 			saveparameters(this.parameters, fullpath+File.separator+"plain_parameters.json");
 			
 			if(Thread.interrupted()) {
@@ -195,6 +207,75 @@ public class BatchCalc extends Thread {
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public void render_image(DataSet dset, String path, int mode, 
+			ArrayList<Float> borders, double pixelsize, double sigmaOrig, float[] shifts, int pixelX, int pixelY) {
+		float[][] stormData = dset.stormData;
+		double sigma = sigmaOrig/pixelsize;
+		int filterwidth = 9;
+		
+		//int pixelX = 0;
+		//int pixelY = 0;
+		if (mode == 0){
+			mode = 1;
+		}
+		
+		//calculate image size
+		switch(mode) {
+			case 1: //xy
+				break;
+			case 2: //xz
+				break;
+				
+			case 3: //yz
+				break;
+		}
+		
+		ArrayList<Float> dims = new ArrayList<Float>();
+		dims.add(borders.get(0));
+		dims.add(borders.get(1));
+		dims.add(borders.get(2));
+		dims.add(borders.get(3));
+		dims.add(borders.get(4));
+		dims.add(borders.get(5));
+		
+		
+		ArrayList<float[][]> coloredImage = new ArrayList<float[][]>();
+		for (int i = 0; i<3; i++){
+			float[][] ch = new float[pixelX][pixelY];
+			coloredImage.add(ch);
+		}
+		
+		coloredImage = Calc.addFilteredPoints3D(coloredImage, sigma, filterwidth, pixelsize, stormData,mode,borders,dims,dataset.getParameterSet().isColorProof());
+		
+		ImageProcessor ipRed = new FloatProcessor(pixelX,pixelY);
+		ImageProcessor ipGreen = new FloatProcessor(pixelX,pixelY);
+		ImageProcessor ipBlue = new FloatProcessor(pixelX,pixelY);
+		ipRed.setFloatArray(coloredImage.get(0));
+		ipGreen.setFloatArray(coloredImage.get(1));
+		ipBlue.setFloatArray(coloredImage.get(2));
+		ImagePlus imgPRed = new ImagePlus("", ipRed);
+		ImagePlus imgPGreen = new ImagePlus("", ipGreen);
+		ImagePlus imgPBlue = new ImagePlus("", ipBlue);
+		System.out.println("3D Image rendered ("+imgPRed.getWidth()+"*"+imgPRed.getHeight()+")");
+		ArrayList<ImagePlus> colImg = new ArrayList<ImagePlus>();
+		colImg.add(imgPRed);
+		colImg.add(imgPGreen);
+		colImg.add(imgPBlue);
+		String basename = path.substring(0, path.length()-4);
+		/*if (!scalebar){
+			ij.IJ.save(colImg.get(0),basename+tag+"redCh.tif");
+			ij.IJ.save(colImg.get(1),basename+tag+"greenCh.tif");
+			ij.IJ.save(colImg.get(2),basename+tag+"blueCh.tif");
+		}
+		*/
+		ImagePlus[] imPlusStack = new ImagePlus[3];
+		imPlusStack[0] = colImg.get(0);
+		imPlusStack[1] = colImg.get(1);
+		imPlusStack[2] = colImg.get(2);
+		ImagePlus imgRGB = RGBStackMerge.mergeChannels(imPlusStack, true);
+		ij.IJ.saveAs(imgRGB, "png", path);
 	}
 
 }
